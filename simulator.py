@@ -36,7 +36,19 @@ for _ in np.arange(0, int(T), time_step):
         left_or_right = random.random()  # random number to compare with probability of going left or right
 
         # determining a random angle that the larva will turn following a normal, *Gaussian*, distribution
-        reference_angle = np.random.normal(loc=(np.pi/3), scale=np.pi, size=(1, 1))[0]
+        # Define parameters
+        lower_bound = 0
+        upper_bound = np.pi
+        mean = np.pi / 3
+        sigma = 1.0  # Standard deviation of the Gaussian distribution
+
+        # Generate random number from Gaussian distribution
+        random_number = np.random.normal(mean, sigma)
+        # Make the lower bound exclusive by adding a small epsilon value
+        lower_bound_exclusive = lower_bound + 1e-10
+
+        # Clip the random number to ensure it falls within the range [0, pi]
+        reference_angle = np.clip(random_number, lower_bound, upper_bound)
         print(f"reference angle: {reference_angle}")
         # reference_angle = np.pi / 2  # angle at which larva will turn wrt the direction it's already facing
 
@@ -65,17 +77,6 @@ for _ in np.arange(0, int(T), time_step):
     x_positions.append(x)
     y_positions.append(y)
 
-# Plot trajectory
-plt.plot(x_positions, y_positions, label='Trajectory')
-plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # Plot turn points as red dots
-plt.title('Larva Trajectory with Turn Points')
-plt.xlabel('X position')
-plt.ylabel('Y position')
-plt.xlim(-100, 100)  # Set x-axis limits
-plt.ylim(-100, 100)  # Set y-axis limits
-plt.legend()
-plt.grid(True)
-plt.show(block=True)
 
 print("Number of turns:", num_turns)
 print("Number of straight runs:", num_runs)
@@ -129,3 +130,15 @@ else:
     print("Not enough data to perform the Runs Test")
 
 
+# Plot trajectory
+plt.scatter(0, 0, color='green', label='Starting Point')  # Plot starting position
+plt.plot(x_positions, y_positions, label='Trajectory')
+plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # Plot turn points as red dots
+plt.title('Larva Trajectory with Turn Points')
+plt.xlabel('X position')
+plt.ylabel('Y position')
+plt.xlim(-100, 100)  # Set x-axis limits
+plt.ylim(-100, 100)  # Set y-axis limits
+plt.legend()
+plt.grid(True)
+plt.show(block=True)
