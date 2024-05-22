@@ -6,7 +6,7 @@ from scipy.stats import norm
 # Input parameters
 N = 100
 T = 600  # from Ch16, at least 100 turns for ~10 min
-time_interval = 1
+time_step = 1
 
 turning_probability = (N / T)
 
@@ -28,16 +28,22 @@ num_runs = 0
 movement_sequence = []
 
 # Simulation loop
-for _ in np.arange(0, int(T), time_interval):
+for _ in np.arange(0, int(T), time_step):
     turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
     if turn_or_not < turning_probability:  # will turn either left or right
         prob_left_right = 0.5  # probability of left or right is 1/2 or 5/10
         left_or_right = random.random()  # random number to compare with probability of going left or right
+
+        # determining a random angle that the larva will turn following a normal, *Gaussian*, distribution
+        reference_angle = np.random.normal(loc=(np.pi/3), scale=np.pi, size=(1, 1))[0]
+        print(f"reference angle: {reference_angle}")
+        # reference_angle = np.pi / 2  # angle at which larva will turn wrt the direction it's already facing
+
         if left_or_right < prob_left_right:  # if random number is <0.5, go left
-            angle += np.pi / 2  # turn left by 90 degrees
+            angle += reference_angle  # turn left by reference angle
         else:  # if random number is >=0.5, go right
-            angle -= np.pi / 2  # turn right by 90 degrees
+            angle -= reference_angle  # turn right by reference angle
         num_turns += 1
 
         # Record turn point
