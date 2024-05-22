@@ -6,7 +6,7 @@ from scipy.stats import norm
 # Input parameters
 N = 100
 T = 600  # from Ch16, at least 100 turns for ~10 min
-time_interval = 1
+time_step = 1
 
 turning_probability = (N / T)
 
@@ -28,16 +28,34 @@ num_runs = 0
 movement_sequence = []
 
 # Simulation loop
-for _ in np.arange(0, int(T), time_interval):
+for _ in np.arange(0, int(T), time_step):
     turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
     if turn_or_not < turning_probability:  # will turn either left or right
         prob_left_right = 0.5  # probability of left or right is 1/2 or 5/10
         left_or_right = random.random()  # random number to compare with probability of going left or right
+
+        # determining a random angle that the larva will turn following a normal, *Gaussian*, distribution
+        # Define parameters
+        lower_bound = 0
+        upper_bound = np.pi
+        mean = np.pi / 3
+        sigma = 1.0  # Standard deviation of the Gaussian distribution
+
+        # Generate random number from Gaussian distribution
+        random_number = np.random.normal(mean, sigma)
+        # Make the lower bound exclusive by adding a small epsilon value
+        lower_bound_exclusive = lower_bound + 1e-10
+
+        # Clip the random number to ensure it falls within the range [0, pi]
+        reference_angle = np.clip(random_number, lower_bound, upper_bound)
+        print(f"reference angle: {reference_angle}")
+        # reference_angle = np.pi / 2  # angle at which larva will turn wrt the direction it's already facing
+
         if left_or_right < prob_left_right:  # if random number is <0.5, go left
-            angle += np.pi / 2  # turn left by 90 degrees
+            angle += reference_angle  # turn left by reference angle
         else:  # if random number is >=0.5, go right
-            angle -= np.pi / 2  # turn right by 90 degrees
+            angle -= reference_angle  # turn right by reference angle
         num_turns += 1
 
         # Record turn point
@@ -59,17 +77,6 @@ for _ in np.arange(0, int(T), time_interval):
     x_positions.append(x)
     y_positions.append(y)
 
-# Plot trajectory
-plt.plot(x_positions, y_positions, label='Trajectory')
-plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # Plot turn points as red dots
-plt.title('Larva Trajectory with Turn Points')
-plt.xlabel('X position')
-plt.ylabel('Y position')
-plt.xlim(-100, 100)  # Set x-axis limits
-plt.ylim(-100, 100)  # Set y-axis limits
-plt.legend()
-plt.grid(True)
-plt.show(block=True)
 
 print("Number of turns:", num_turns)
 print("Number of straight runs:", num_runs)
@@ -123,3 +130,15 @@ else:
     print("Not enough data to perform the Runs Test")
 
 
+# Plot trajectory
+plt.scatter(0, 0, color='green', label='Starting Point')  # Plot starting position
+plt.plot(x_positions, y_positions, label='Trajectory')
+plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # Plot turn points as red dots
+plt.title('Larva Trajectory with Turn Points')
+plt.xlabel('X position')
+plt.ylabel('Y position')
+plt.xlim(-100, 100)  # Set x-axis limits
+plt.ylim(-100, 100)  # Set y-axis limits
+plt.legend()
+plt.grid(True)
+plt.show(block=True)
