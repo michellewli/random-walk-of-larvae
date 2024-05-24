@@ -3,12 +3,12 @@ import numpy as np
 import random
 from scipy.stats import norm
 
-# Input parameters
-N = 100
+# Input parameters, distance remains ~constant for every larva
+N = 100  # number of turns
 T = 600  # from Ch16, at least 100 turns for ~10 min
 time_step = 1
 
-turning_probability = (N / T)
+turning_probability = (N / T) / time_step
 
 # Initialize position and direction
 x, y = 0, 0
@@ -49,8 +49,7 @@ for _ in np.arange(0, int(T), time_step):
 
         # Clip the random number to ensure it falls within the range [0, pi]
         reference_angle = np.clip(random_number, lower_bound, upper_bound)
-        print(f"reference angle: {reference_angle}")
-        # reference_angle = np.pi / 2  # angle at which larva will turn wrt the direction it's already facing
+        # angle at which larva will turn wrt the direction it's already facing
 
         if left_or_right < prob_left_right:  # if random number is <0.5, go left
             angle += reference_angle  # turn left by reference angle
