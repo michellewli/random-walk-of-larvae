@@ -3,10 +3,10 @@ import numpy as np
 import random
 from scipy.stats import norm
 
-# Input parameters, distance remains ~constant for every larva
+# Input parameters,
 N = 100  # number of turns
-T = 600  # from Ch16, at least 100 turns for ~10 min
-time_step = 1
+T = 600  # from Ch16, there are at least 100 turns for ~10 min of experiment
+time_step = 1 # in seconds
 
 turning_probability = (N / T) / time_step
 
@@ -31,25 +31,15 @@ movement_sequence = []
 for _ in np.arange(0, int(T), time_step):
     turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
+    v0 = np.random.normal(loc=2.9095, scale=0.7094, size=1)[0] * 0.2645833333 # speed of larva in px/s convert -> mm/s
+    deltat = np.random.normal(loc=18.704, scale=23.316, size=1)[0]  # change in time between turns
+
     if turn_or_not < turning_probability:  # will turn either left or right
         prob_left_right = 0.5  # probability of left or right is 1/2 or 5/10
         left_or_right = random.random()  # random number to compare with probability of going left or right
 
-        # determining a random angle that the larva will turn following a normal, *Gaussian*, distribution
-        # Define parameters
-        lower_bound = 0
-        upper_bound = np.pi
-        mean = np.pi / 3
-        sigma = 1.0  # Standard deviation of the Gaussian distribution
-
-        # Generate random number from Gaussian distribution
-        random_number = np.random.normal(mean, sigma)
-        # Make the lower bound exclusive by adding a small epsilon value
-        lower_bound_exclusive = lower_bound + 1e-10
-
-        # Clip the random number to ensure it falls within the range [0, pi]
-        reference_angle = np.clip(random_number, lower_bound, upper_bound)
         # angle at which larva will turn wrt the direction it's already facing
+        reference_angle = np.random.normal(loc=66.501, scale=36.874, size=1)[0] # angle in degrees
 
         if left_or_right < prob_left_right:  # if random number is <0.5, go left
             angle += reference_angle  # turn left by reference angle
@@ -69,8 +59,8 @@ for _ in np.arange(0, int(T), time_step):
         movement_sequence.append('S')
 
     # Update position
-    x += np.cos(angle)  # move in x direction
-    y += np.sin(angle)  # move in y direction
+    x += v0 * np.cos(angle) * deltat  # move in x direction
+    y += v0 * np.sin(angle) * deltat  # move in y direction
 
     # Append new position to the lists
     x_positions.append(x)
@@ -116,7 +106,7 @@ runs, expected_runs, z, p_value = runs_test(movement_sequence)
 alpha = 0.05  # Significance level
 
 if runs is not None:
-    print(f"Runs: {runs}")
+    print(f"Probability Runs: {runs}")
     print(f"Expected Runs: {expected_runs}")
     print(f"Z-value: {z}")
     print(f"P-value: {p_value}")
@@ -136,8 +126,9 @@ plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # P
 plt.title('Larva Trajectory with Turn Points')
 plt.xlabel('X position')
 plt.ylabel('Y position')
-plt.xlim(-100, 100)  # Set x-axis limits
-plt.ylim(-100, 100)  # Set y-axis limits
+#plt.xlim(-100, 100)  # Set x-axis limits
+#plt.ylim(-100, 100)  # Set y-axis limits
 plt.legend()
 plt.grid(True)
 plt.show(block=True)
+
