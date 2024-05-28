@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 from scipy.stats import norm
+from datetime import datetime
 
 # Input parameters
 N = 100  # number of turns
@@ -137,5 +138,11 @@ plt.xlabel('X position')
 plt.ylabel('Y position')
 plt.legend()
 plt.grid(True)
+
+# Save plot as an image with a timestamp
+timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+filename = f'images/larva_trajectory_{timestamp}.png'
+plt.savefig(filename)
+
 plt.show()
 
