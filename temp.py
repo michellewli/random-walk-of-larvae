@@ -7,6 +7,7 @@ from scipy.stats import norm
 N = 100  # number of turns
 T = 600  # total time in seconds
 time_step = 1  # in seconds
+total_time = 0
 
 turning_probability = (N / T) / time_step
 
@@ -33,6 +34,7 @@ for _ in np.arange(0, int(T), time_step):
 
     v0 = np.random.normal(loc=2.9095, scale=0.7094, size=1)[0]  # speed of larva in px/s
     deltat = np.random.normal(loc=18.704, scale=23.316, size=1)[0]  # change in time between turns
+    total_time += deltat
 
     if turn_or_not < turning_probability:  # will turn either left or right
         # First, move to the current position based on the previous angle
@@ -121,11 +123,16 @@ if runs is not None:
 else:
     print("Not enough data to perform the Runs Test")
 
+# Print the amount of time the runs took
+print(f"Total time taken: {total_time} seconds")
+
+
 # Plot trajectory
-plt.scatter(0, 0, color='green', label='Starting Point')  # Plot starting position
+plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
 plt.plot(x_positions, y_positions, label='Trajectory')
-plt.scatter(turn_points_x, turn_points_y, color='red', label='Turn Points')  # Plot turn points as red dots
-plt.title('Larva Trajectory with Turn Points')
+plt.scatter(turn_points_x, turn_points_y, color='red', label='Turning Points')  # Plot turn points as red dots
+plt.scatter(x_positions[-1], y_positions[-1], color='blue', label='End Position')  # Plot last point in trajectory
+plt.title('Larva Random Walk with Turning Points')
 plt.xlabel('X position')
 plt.ylabel('Y position')
 plt.legend()
