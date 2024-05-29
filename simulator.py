@@ -28,6 +28,7 @@ num_runs = 0
 
 # Sequence to store the type of each movement (turn: 'T', straight: 'S')
 movement_sequence = []
+runtime = []
 
 # Simulation loop
 for _ in np.arange(0, int(T), time_step):
@@ -35,6 +36,7 @@ for _ in np.arange(0, int(T), time_step):
 
     v0 = np.random.normal(loc=2.9095, scale=0.7094, size=1)[0]  # speed of larva in px/s
     deltat = np.random.normal(loc=18.704, scale=23.316, size=1)[0]  # change in time between turns
+    runtime.append(deltat)
     total_time += deltat
 
     if turn_or_not < turning_probability:  # will turn either left or right
@@ -126,6 +128,7 @@ else:
 
 # Print the amount of time the runs took
 print(f"Total time taken: {total_time} seconds")
+print(f"Runtime: {runtime}")
 
 
 # Plot trajectory
