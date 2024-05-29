@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-from scipy.stats import norm
+from scipy.stats import stats
 from datetime import datetime
 
 # Input parameters
@@ -110,6 +110,7 @@ def runs_test(sequence):
 
     return runs, expected_runs, z, p_value
 
+
 runs, expected_runs, z, p_value = runs_test(movement_sequence)
 alpha = 0.05  # Significance level
 
@@ -148,4 +149,3 @@ filename = f'images/larva_trajectory_{timestamp}.png'
 plt.savefig(filename)
 
 plt.show()
-
