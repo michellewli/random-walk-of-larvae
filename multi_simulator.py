@@ -110,13 +110,17 @@ def main():
     N = 100  # number of turns
     T = 600  # total time in seconds
     time_step = 1  # in seconds
-    num_larvae = int(input("How many larvae? "))  # number of larvae
+    num_walkers = int(input("How many larvae? "))  # number of larvae
 
     walkers = []
-    for _ in range(num_larvae):
+    for _ in range(num_walkers):
         walker = LarvaWalker(N, T, time_step)
         walker.simulate()
         walkers.append(walker)
+
+    colors = plt.get_cmap('tab20', num_walkers)  # Use a colormap to generate distinct colors
+
+    plt.figure(figsize=(10, 6))
 
     for i, walker in enumerate(walkers):
         runs, expected_runs, z, p_value = walker.runs_test()
@@ -137,21 +141,23 @@ def main():
         print(f"  Total time taken: {walker.total_time} seconds")
 
         # Plot trajectory
-        plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
-        plt.scatter(walker.x_positions[-1], walker.y_positions[-1], color='blue', label='End Position')  # last point
-        plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}')
-        plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10)
+        plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+        plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
+
+    plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
+    plt.scatter(walkers[-1].x_positions[-1], walkers[-1].y_positions[-1], color='blue', label='End Position')  # Last point
 
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
     plt.ylabel('Y position')
-    plt.legend()
+    plt.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=1, fontsize='small')  # Place legend outside the plot
     plt.grid(True)
 
     # Save plot as an image with a timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'images/larva_path_{timestamp}.png'
-    plt.savefig(filename)
+    filename = f'larva_path_{timestamp}.png'
+    plt.savefig(filename, bbox_inches='tight')  # Save figure with tight bounding box
+
     plt.show()
 
 if __name__ == "__main__":
