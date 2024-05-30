@@ -124,7 +124,7 @@ def main():
 
     for i, walker in enumerate(walkers):
         runs, expected_runs, z, p_value = walker.runs_test()
-        print(f"Walker {i+1}:")
+        print(f"Lara {i+1}:")
         print(f"  Number of turns: {walker.num_turns}")
         print(f"  Number of straight runs: {walker.num_runs}")
         if runs is not None:
@@ -144,8 +144,8 @@ def main():
         plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
         plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
-    plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
-    plt.scatter(walkers[-1].x_positions[-1], walkers[-1].y_positions[-1], color='blue', label='End Position')  # Last point
+    #plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
+    #plt.scatter(walkers[-1].x_positions[-1], walkers[-1].y_positions[-1], color='blue', label='End Position')  # Last point
 
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
