@@ -155,7 +155,7 @@ def main():
 
     # Save plot as an image with a timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'larva_path_{timestamp}.png'
+    filename = f'images/larva_path_{timestamp}.png'
     plt.savefig(filename, bbox_inches='tight')  # Save figure with tight bounding box
 
     plt.show()
