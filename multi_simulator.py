@@ -1,13 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-from scipy.stats import truncnorm, norm
+import csv
+from scipy.stats import truncnorm, norm, exponnorm
 from datetime import datetime
 
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
+
+# Helper function to generate a single truncated exponnorm value
+def get_truncated_exponorm(mean, std_dev, lower_bound=0):
+    K = std_dev / mean
+    value = exponnorm.rvs(K, loc=0, scale=mean)
+    while value < lower_bound:
+        value = exponnorm.rvs(K, loc=0, scale=mean)
+    return value
 
 class LarvaWalker:
     def __init__(self, N, T, time_step=1):
@@ -25,6 +34,8 @@ class LarvaWalker:
         self.num_runs = 0
         self.movement_sequence = []
         self.runtime = []
+        self.speeds = []
+        self.angles = []
         self.total_time = 0
 
     def simulate(self):
@@ -32,7 +43,14 @@ class LarvaWalker:
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
             v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
-            deltat = get_truncated_normal(mean=18.704, std_dev=23.316)  # change in time between turns
+            self.speeds.append(v0)
+
+            # Parameters for the exponnorm distribution
+            mean = 18.704
+            std_dev = 23.316
+
+            # Generate truncated exponnorm value ensuring it is not negative
+            deltat = get_truncated_exponorm(mean, std_dev)
             self.runtime.append(deltat)
             self.total_time += deltat
 
@@ -51,6 +69,7 @@ class LarvaWalker:
 
                 # Angle at which larva will turn wrt the direction it's already facing
                 reference_angle = get_truncated_normal(mean=66.501, std_dev=36.874)  # angle in degrees
+                self.angles.append(reference_angle)
 
                 if left_or_right < prob_left_right:  # if random number is <0.5, go left
                     self.angle += reference_angle  # turn left by reference angle
@@ -122,30 +141,38 @@ def main():
 
     plt.figure(figsize=(10, 6))
 
-    for i, walker in enumerate(walkers):
-        runs, expected_runs, z, p_value = walker.runs_test()
-        print(f"Lara {i+1}:")
-        print(f"  Number of turns: {walker.num_turns}")
-        print(f"  Number of straight runs: {walker.num_runs}")
-        if runs is not None:
-            print(f"  Probability Runs: {runs}")
-            print(f"  Expected Runs: {expected_runs}")
-            print(f"  Z-value: {z}")
-            print(f"  P-value: {p_value}")
-            if p_value < 0.05:
-                print(f"  The sequence is not random (p-value: {p_value} < 0.05).")
-            else:
-                print(f"  The sequence is random (p-value: {p_value} >= 0.05).")
-        else:
-            print("  Not enough data to perform the Runs Test")
-        print(f"  Total time taken: {walker.total_time} seconds")
+    # Prepare CSV file
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    csv_filename = f'data/larva_data_{timestamp}.csv'
 
-        # Plot trajectory
-        plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
-        plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
+    with open(csv_filename, mode='w', newline='') as csv_file:
+        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Total Time', 'Run Time', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
 
-    #plt.scatter(0, 0, color='green', label='Start Position')  # Plot starting position
-    #plt.scatter(walkers[-1].x_positions[-1], walkers[-1].y_positions[-1], color='blue', label='End Position')  # Last point
+        max_length = max(len(walker.runtime) for walker in walkers)
+
+        for i, walker in enumerate(walkers):
+            runs, expected_runs, z, p_value = walker.runs_test()
+            for j in range(max_length):
+                row = {
+                    'Larva': f'Larva {i+1}' if j == 0 else '',
+                    'Number of Turns': walker.num_turns if j == 0 else '',
+                    'Number of Straight Runs': walker.num_runs if j == 0 else '',
+                    'Total Time': walker.total_time if j == 0 else '',
+                    'Run Time': walker.runtime[j] if j < len(walker.runtime) else '',
+                    'Speed': walker.speeds[j] if j < len(walker.speeds) else '',
+                    'Angle': walker.angles[j] if j < len(walker.angles) else '',
+                    'Runs': runs if j == 0 else '',
+                    'Expected Runs': expected_runs if j == 0 else '',
+                    'Z-value': z if j == 0 else '',
+                    'P-value': p_value if j == 0 else ''
+                }
+                writer.writerow(row)
+
+            # Plot trajectory
+            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+            plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
@@ -154,7 +181,6 @@ def main():
     plt.grid(True)
 
     # Save plot as an image with a timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'images/larva_path_{timestamp}.png'
     plt.savefig(filename, bbox_inches='tight')  # Save figure with tight bounding box
 
