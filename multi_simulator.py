@@ -150,7 +150,7 @@ def main():
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Run Time', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
+        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -163,7 +163,7 @@ def main():
                     'Larva': f'Larva {i+1}' if j == 0 else '',
                     'Number of Turns': walker.num_turns if j == 0 else '',
                     'Number of Straight Runs': walker.num_runs if j == 0 else '',
-                    'Run Time': walker.runtime[j] if j < len(walker.runtime) else '',
+                    #'Run Time': walker.runtime[j] if j < len(walker.runtime) else '',
                     'Speed': walker.speeds[j] if j < len(walker.speeds) else '',
                     'Angle': walker.angles[j] if j < len(walker.angles) else '',
                     'Runs': runs if j == 0 else '',
