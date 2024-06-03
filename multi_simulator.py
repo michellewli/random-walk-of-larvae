@@ -24,10 +24,12 @@ class LarvaWalker:
         self.T = T
         self.time_step = time_step
         self.turning_probability = (N / T) / time_step
-        self.x, self.y = 0, 0
+        self.x, self.y = 0.0, 0.0
         self.angle = 0  # initial angle, 0 means facing right
         self.x_positions = [self.x]  # starting x position
+        print(f"initial x pos: {self.x_positions}")
         self.y_positions = [self.y]  # starting y position
+        print(f"initial y pos: {self.y_positions}")
         self.turn_points_x = []  # x coordinates of turn points
         self.turn_points_y = []  # y coordinates of turn points
         self.num_turns = 0
@@ -49,10 +51,12 @@ class LarvaWalker:
             mean = 18.704
             std_dev = 23.316
 
+            '''
             # Generate truncated exponnorm value ensuring it is not negative
             deltat = get_truncated_exponorm(mean, std_dev)
             self.runtime.append(deltat)
             self.total_time += deltat
+            '''
 
             if turn_or_not < self.turning_probability:  # will turn either left or right
                 # First, move to the current position based on the previous angle
@@ -146,7 +150,7 @@ def main():
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Total Time', 'Run Time', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
+        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Run Time', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -159,7 +163,6 @@ def main():
                     'Larva': f'Larva {i+1}' if j == 0 else '',
                     'Number of Turns': walker.num_turns if j == 0 else '',
                     'Number of Straight Runs': walker.num_runs if j == 0 else '',
-                    'Total Time': walker.total_time if j == 0 else '',
                     'Run Time': walker.runtime[j] if j < len(walker.runtime) else '',
                     'Speed': walker.speeds[j] if j < len(walker.speeds) else '',
                     'Angle': walker.angles[j] if j < len(walker.angles) else '',
@@ -171,6 +174,7 @@ def main():
                 writer.writerow(row)
 
             # Plot trajectory
+            print(f"x traj: {walker.x_positions}\ny traj: {walker.y_positions}")
             plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
