@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import csv
-from scipy.stats import truncnorm, norm
+from scipy.stats import truncnorm
 from datetime import datetime
 
 # Helper function to generate truncated normal values
@@ -76,36 +76,6 @@ class LarvaWalker:
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
-    def runs_test(self):
-        sequence = self.movement_sequence
-        n1 = sequence.count('T')
-        n2 = sequence.count('S')
-        n = n1 + n2
-
-        if n1 == 0 or n2 == 0:
-            return None, None, None, None  # Not enough data to perform the test
-
-        # Calculate number of runs
-        runs = 1
-        for i in range(1, len(sequence)):
-            if sequence[i] != sequence[i - 1]:
-                runs += 1
-
-        # Expected number of runs
-        expected_runs = (2 * n1 * n2) / n + 1
-        # Variance of the number of runs
-        variance_runs = (2 * n1 * n2 * (2 * n1 * n2 - n)) / (n ** 2 * (n - 1))
-
-        if variance_runs == 0:
-            return runs, expected_runs, None, None
-
-        # Z-value for the runs test
-        z = (runs - expected_runs) / np.sqrt(variance_runs)
-        # Two-tailed p-value
-        p_value = 2 * (1 - norm.cdf(abs(z)))
-
-        return runs, expected_runs, z, p_value
-
 def main():
     N = 100  # number of turns
     T = 600  # total time in seconds
@@ -127,25 +97,20 @@ def main():
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
+        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Speed', 'Angle']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
         max_length = max(len(walker.speeds) for walker in walkers)
 
         for i, walker in enumerate(walkers):
-            runs, expected_runs, z, p_value = walker.runs_test()
             for j in range(max_length):
                 row = {
                     'Larva': f'Larva {i+1}' if j == 0 else '',
                     'Number of Turns': walker.num_turns if j == 0 else '',
                     'Number of Straight Runs': walker.num_runs if j == 0 else '',
                     'Speed': walker.speeds[j] if j < len(walker.speeds) else '',
-                    'Angle': walker.angles[j] if j < len(walker.angles) else '',
-                    'Runs': runs if j == 0 else '',
-                    'Expected Runs': expected_runs if j == 0 else '',
-                    'Z-value': z if j == 0 else '',
-                    'P-value': p_value if j == 0 else ''
+                    'Angle': walker.angles[j] if j < len(walker.angles) else ''
                 }
                 writer.writerow(row)
 
