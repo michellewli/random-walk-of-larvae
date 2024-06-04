@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import csv
-from scipy.stats import truncnorm, norm, exponnorm
+from scipy.stats import truncnorm, norm
 from datetime import datetime
 
 # Helper function to generate truncated normal values
@@ -10,21 +10,13 @@ def get_truncated_normal(mean, std_dev, lower_bound=0):
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
-# Helper function to generate a single truncated exponnorm value
-def get_truncated_exponorm(mean, std_dev, lower_bound=0):
-    K = std_dev / mean
-    value = exponnorm.rvs(K, loc=0, scale=mean)
-    while value < lower_bound:
-        value = exponnorm.rvs(K, loc=0, scale=mean)
-    return value
-
 class LarvaWalker:
     def __init__(self, N, T, time_step=1):
         self.N = N
         self.T = T
         self.time_step = time_step
         self.turning_probability = (N / T) / time_step
-        self.x, self.y = 0, 0
+        self.x, self.y = 0.0, 0.0
         self.angle = 0  # initial angle, 0 means facing right
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
@@ -33,10 +25,8 @@ class LarvaWalker:
         self.num_turns = 0
         self.num_runs = 0
         self.movement_sequence = []
-        self.runtime = []
         self.speeds = []
         self.angles = []
-        self.total_time = 0
 
     def simulate(self):
         for _ in np.arange(0, int(self.T), self.time_step):
@@ -44,15 +34,6 @@ class LarvaWalker:
 
             v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
             self.speeds.append(v0)
-
-            # Parameters for the exponnorm distribution
-            mean = 18.704
-            std_dev = 23.316
-
-            # Generate truncated exponnorm value ensuring it is not negative
-            deltat = get_truncated_exponorm(mean, std_dev)
-            self.runtime.append(deltat)
-            self.total_time += deltat
 
             if turn_or_not < self.turning_probability:  # will turn either left or right
                 # First, move to the current position based on the previous angle
@@ -146,11 +127,11 @@ def main():
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Total Time', 'Run Time', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
+        fieldnames = ['Larva', 'Number of Turns', 'Number of Straight Runs', 'Speed', 'Angle', 'Runs', 'Expected Runs', 'Z-value', 'P-value']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
-        max_length = max(len(walker.runtime) for walker in walkers)
+        max_length = max(len(walker.speeds) for walker in walkers)
 
         for i, walker in enumerate(walkers):
             runs, expected_runs, z, p_value = walker.runs_test()
@@ -159,8 +140,6 @@ def main():
                     'Larva': f'Larva {i+1}' if j == 0 else '',
                     'Number of Turns': walker.num_turns if j == 0 else '',
                     'Number of Straight Runs': walker.num_runs if j == 0 else '',
-                    'Total Time': walker.total_time if j == 0 else '',
-                    'Run Time': walker.runtime[j] if j < len(walker.runtime) else '',
                     'Speed': walker.speeds[j] if j < len(walker.speeds) else '',
                     'Angle': walker.angles[j] if j < len(walker.angles) else '',
                     'Runs': runs if j == 0 else '',
