@@ -17,7 +17,7 @@ class LarvaWalker:
         self.time_step = time_step
         self.turning_probability = (N / T) / time_step
         self.x, self.y = 0.0, 0.0
-        self.angle = 0  # initial angle, 0 means facing right
+        self.angle = random.uniform(0, 180)  # initial angle, 0 means facing right
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
         self.turn_points_x = []  # x coordinates of turn points
