@@ -24,7 +24,6 @@ class LarvaWalker:
         self.turn_points_y = []  # y coordinates of turn points
         self.num_turns = 0
         self.num_runs = 0
-        self.movement_sequence = []
         self.speeds = []
         self.angles = [self.angle]  # initialize with the starting angle
         self.times = [0]  # start time at 0
@@ -61,23 +60,19 @@ class LarvaWalker:
                 self.angles.append(self.angle)  # Add the new angle after turning
                 self.num_turns += 1
 
-                # Record movement type
-                self.movement_sequence.append('T')
+                self.times.append(elapsed_time)  # Add the current elapsed time
+                # Append new position to the lists
+                self.x_positions.append(self.x)
+                self.y_positions.append(self.y)
+
             else:  # will go straight
                 self.num_runs += 1
-                # Record movement type
-                self.movement_sequence.append('S')
 
                 # Update position without turning
                 self.x += v0 * np.cos(np.radians(self.angle)) * self.time_step
                 self.y += v0 * np.sin(np.radians(self.angle)) * self.time_step
 
                 self.angles.append(self.angle)  # Add the angle even if it's straight movement
-
-            self.times.append(elapsed_time)  # Add the current elapsed time
-            # Append new position to the lists
-            self.x_positions.append(self.x)
-            self.y_positions.append(self.y)
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -118,7 +113,7 @@ def main():
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
                 runL = walker.speeds[j-1] * walker.time_step
-                runT = walker.time_step
+                runT = walker.times[j] - walker.times[j - 1]
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = walker.x_positions[j]
