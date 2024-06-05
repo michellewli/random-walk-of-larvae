@@ -133,7 +133,7 @@ def main():
                     'runQ': runQ,
                     'runL': runL,
                     'runT': runT,
-                    'runX': '',
+                    'runX': runX1,
                     'reo#HS': random.randint(1, 10),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
