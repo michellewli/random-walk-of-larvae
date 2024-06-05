@@ -181,7 +181,7 @@ def main():
     plt.ylabel('Frequency')
 
     # Save histograms as an image with a timestamp
-    hist_filename = f'images/larva_histograms_{timestamp}.png'
+    hist_filename = f'histograms/larva_histograms_{timestamp}.png'
     plt.savefig(hist_filename, bbox_inches='tight')  # Save figure with tight bounding box
 
     plt.show()
