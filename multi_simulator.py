@@ -103,7 +103,7 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    csv_filename = f'larva_data_{timestamp}.csv'
+    csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
         fieldnames = ['Column1', 'set', 'expt', 'track', 'time0', 'reoYN', 'runQ', 'runL', 'runT', 'runX', 'reo#HS', 'reoQ1', 'reoQ2', 'reoHS1', 'runQ0', 'runX0', 'runY0', 'runX1', 'runY1']
@@ -160,7 +160,7 @@ def main():
     plt.grid(True)
 
     # Save plot as an image with a timestamp
-    filename = f'data/larva_path_{timestamp}.png'
+    filename = f'images/larva_path_{timestamp}.png'
     plt.savefig(filename, bbox_inches='tight')  # Save figure with tight bounding box
 
     plt.show()
