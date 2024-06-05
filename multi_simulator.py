@@ -134,7 +134,7 @@ def main():
                     'runL': runL,
                     'runT': runT,
                     'runX': runX1,
-                    'reo#HS': random.randint(1, 10),
+                    'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
                     'reoHS1': '',
