@@ -166,7 +166,7 @@ def main():
     plt.show()
 
     # Plot histograms of all speeds and angles
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(3, 2))
 
     plt.subplot(1, 2, 1)
     plt.hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
