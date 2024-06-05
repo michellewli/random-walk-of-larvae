@@ -72,7 +72,7 @@ class LarvaWalker:
                 self.x += v0 * np.cos(np.radians(self.angle)) * self.time_step
                 self.y += v0 * np.sin(np.radians(self.angle)) * self.time_step
 
-                self.angles.append(self.angle)  # Add the angle even if it's straight movement
+                #self.angles.append(self.angle)  # Add the angle even if it's straight movement
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
