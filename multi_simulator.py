@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import math
 import csv
 from scipy.stats import truncnorm
 from datetime import datetime
@@ -25,7 +26,7 @@ class LarvaWalker:
         self.num_turns = 0
         self.num_runs = 0
         self.speeds = []
-        self.angles = [self.angle]  # initialize with the starting angle
+        self.angles = [math.radians(self.angle)]  # initialize with the starting angle
         self.times = [0]  # start time at 0
 
     def simulate(self):
@@ -57,7 +58,7 @@ class LarvaWalker:
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
 
-                self.angles.append(self.angle)  # Add the new angle after turning
+                self.angles.append(self.angle % (2 * math.pi))  # Add the new angle after turning
                 self.num_turns += 1
 
                 self.times.append(elapsed_time)  # Add the current elapsed time
@@ -71,8 +72,6 @@ class LarvaWalker:
                 # Update position without turning
                 self.x += v0 * np.cos(np.radians(self.angle)) * self.time_step
                 self.y += v0 * np.sin(np.radians(self.angle)) * self.time_step
-
-                #self.angles.append(self.angle)  # Add the angle even if it's straight movement
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -132,8 +131,8 @@ def main():
                     'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
-                    'reoHS1': '',
-                    'runQ0': '',
+                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                    'runQ0': prev_angle,
                     'runX0': runX0,
                     'runY0': runY0,
                     'runX1': runX1,
