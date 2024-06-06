@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-import math
 import csv
 from scipy.stats import truncnorm
 from datetime import datetime
@@ -18,7 +17,7 @@ class LarvaWalker:
         self.time_step = time_step
         self.turning_probability = (N / T) / time_step
         self.x, self.y = 0.0, 0.0
-        self.angle = random.uniform(0, 360)  # initial angle, 0 means facing right
+        self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
         self.turn_points_x = []  # x coordinates of turn points
@@ -26,7 +25,7 @@ class LarvaWalker:
         self.num_turns = 0
         self.num_runs = 0
         self.speeds = []
-        self.angles = [math.radians(self.angle)]  # initialize with the starting angle
+        self.angles = [self.angle]  # initialize with the starting angle in radians
         self.times = [0]  # start time at 0
 
     def simulate(self):
@@ -40,8 +39,8 @@ class LarvaWalker:
 
             if turn_or_not < self.turning_probability:  # will turn either left or right
                 # First, move to the current position based on the previous angle
-                self.x += v0 * np.cos(np.radians(self.angle)) * self.time_step
-                self.y += v0 * np.sin(np.radians(self.angle)) * self.time_step
+                self.x += v0 * np.cos(self.angle) * self.time_step
+                self.y += v0 * np.sin(self.angle) * self.time_step
 
                 # Record turn point
                 self.turn_points_x.append(self.x)
@@ -52,13 +51,13 @@ class LarvaWalker:
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
-                reference_angle = get_truncated_normal(mean=66.501, std_dev=36.874)  # angle in degrees
+                reference_angle = np.radians(get_truncated_normal(mean=66.501, std_dev=36.874))  # angle in radians
                 if left_or_right < prob_left_right:  # if random number is <0.5, go left
                     self.angle += reference_angle  # turn left by reference angle
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
 
-                self.angles.append(self.angle % (2 * math.pi))  # Add the new angle after turning
+                self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
 
                 self.times.append(elapsed_time)  # Add the current elapsed time
@@ -70,8 +69,8 @@ class LarvaWalker:
                 self.num_runs += 1
 
                 # Update position without turning
-                self.x += v0 * np.cos(np.radians(self.angle)) * self.time_step
-                self.y += v0 * np.sin(np.radians(self.angle)) * self.time_step
+                self.x += v0 * np.cos(self.angle) * self.time_step
+                self.y += v0 * np.sin(self.angle) * self.time_step
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -171,7 +170,7 @@ def main():
     plt.subplot(1, 2, 2)
     plt.hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
     plt.title('Histogram of Angles')
-    plt.xlabel('Angle (degrees)')
+    plt.xlabel('Angle (radians)')
     plt.ylabel('Frequency')
 
     # Save histograms as an image with a timestamp
