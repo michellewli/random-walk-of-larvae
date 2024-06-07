@@ -93,7 +93,7 @@ def main():
 
     colors = plt.get_cmap('tab20', num_walkers)  # Use a colormap to generate distinct colors
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -144,37 +144,37 @@ def main():
                 prev_y = walker.y_positions[j]
 
             # Plot trajectory
-            ax.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
-            ax.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
+            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+            plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
-    ax.set_title('Larvae Random Walk with Turning Points')
-    ax.set_xlabel('X position')
-    ax.set_ylabel('Y position')
-    ax.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=1, fontsize='small')  # Place legend outside the plot
-    ax.grid(True)
+    plt.title('Larvae Random Walk with Turning Points')
+    plt.xlabel('X position')
+    plt.ylabel('Y position')
+    plt.legend(loc='upper right', bbox_to_anchor=(1, 1), ncol=1, fontsize='small')  # Place legend inside the plot
+    plt.grid(True)
 
-    # Save interactive plot as an HTML file
+    # Save interactive plot as HTML using mpld3
     interactive_filename = f'images/larva_path_{timestamp}.html'
-    mpld3.save_html(fig, interactive_filename)
+    mpld3.save_html(plt.gcf(), interactive_filename)
 
     plt.show()
 
     # Plot histograms of all speeds and angles
-    fig_hist, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 8))
+    fig, axs = plt.subplots(1, 2, figsize=(12, 8))
 
-    ax1.hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
-    ax1.set_title('Histogram of Speeds')
-    ax1.set_xlabel('Speed (px/s)')
-    ax1.set_ylabel('Frequency')
+    axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
+    axs[0].set_title('Histogram of Speeds')
+    axs[0].set_xlabel('Speed (px/s)')
+    axs[0].set_ylabel('Frequency')
 
-    ax2.hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
-    ax2.set_title('Histogram of Angles')
-    ax2.set_xlabel('Angle (radians)')
-    ax2.set_ylabel('Frequency')
+    axs[1].hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
+    axs[1].set_title('Histogram of Angles')
+    axs[1].set_xlabel('Angle (radians)')
+    axs[1].set_ylabel('Frequency')
 
-    # Save interactive histograms as an HTML file
+    # Save histograms as HTML using mpld3
     hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
-    mpld3.save_html(fig_hist, hist_interactive_filename)
+    mpld3.save_html(fig, hist_interactive_filename)
 
     plt.show()
 
