@@ -12,11 +12,12 @@ def get_truncated_normal(mean, std_dev, lower_bound=0):
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
 class LarvaWalker:
-    def __init__(self, N, T, time_step=1):
+    def __init__(self, N, T, time_step, handedness=0):
         self.N = N
         self.T = T
         self.time_step = time_step
-        self.turning_probability = (N / T) / time_step
+        self.handedness = handedness
+        self.turning_probability = ((N / T) / time_step) + self.handedness
         self.x, self.y = 0.0, 0.0
         self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
         self.x_positions = [self.x]  # starting x position
@@ -76,9 +77,9 @@ class LarvaWalker:
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
 def main():
-    N = 100  # number of turns
-    T = 600  # total time in seconds
-    time_step = 1  # in seconds
+    N = int(input("Number of turns (N): "))  # number of turns
+    T = int(input("Total time for experiment: "))  # total time in seconds
+    time_step = float(input("Time step: "))  # in seconds
     num_walkers = int(input("How many larvae? "))  # number of larvae
 
     walkers = []
