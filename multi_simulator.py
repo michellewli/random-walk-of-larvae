@@ -4,6 +4,7 @@ import random
 import csv
 from scipy.stats import truncnorm
 from datetime import datetime
+import mpld3
 
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
@@ -92,7 +93,7 @@ def main():
 
     colors = plt.get_cmap('tab20', num_walkers)  # Use a colormap to generate distinct colors
 
-    plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -143,39 +144,37 @@ def main():
                 prev_y = walker.y_positions[j]
 
             # Plot trajectory
-            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
-            plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
+            ax.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+            ax.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
-    plt.title('Larvae Random Walk with Turning Points')
-    plt.xlabel('X position')
-    plt.ylabel('Y position')
-    plt.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=1, fontsize='small')  # Place legend outside the plot
-    plt.grid(True)
+    ax.set_title('Larvae Random Walk with Turning Points')
+    ax.set_xlabel('X position')
+    ax.set_ylabel('Y position')
+    ax.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=1, fontsize='small')  # Place legend outside the plot
+    ax.grid(True)
 
-    # Save plot as an image with a timestamp
-    filename = f'images/larva_path_{timestamp}.png'
-    plt.savefig(filename, bbox_inches='tight')  # Save figure with tight bounding box
+    # Save interactive plot as an HTML file
+    interactive_filename = f'images/larva_path_{timestamp}.html'
+    mpld3.save_html(fig, interactive_filename)
 
     plt.show()
 
     # Plot histograms of all speeds and angles
-    plt.figure(figsize=(12, 8))
+    fig_hist, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 8))
 
-    plt.subplot(1, 2, 1)
-    plt.hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
-    plt.title('Histogram of Speeds')
-    plt.xlabel('Speed (px/s)')
-    plt.ylabel('Frequency')
+    ax1.hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
+    ax1.set_title('Histogram of Speeds')
+    ax1.set_xlabel('Speed (px/s)')
+    ax1.set_ylabel('Frequency')
 
-    plt.subplot(1, 2, 2)
-    plt.hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
-    plt.title('Histogram of Angles')
-    plt.xlabel('Angle (radians)')
-    plt.ylabel('Frequency')
+    ax2.hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
+    ax2.set_title('Histogram of Angles')
+    ax2.set_xlabel('Angle (radians)')
+    ax2.set_ylabel('Frequency')
 
-    # Save histograms as an image with a timestamp
-    hist_filename = f'histograms/larva_histograms_{timestamp}.png'
-    plt.savefig(hist_filename, bbox_inches='tight')  # Save figure with tight bounding box
+    # Save interactive histograms as an HTML file
+    hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
+    mpld3.save_html(fig_hist, hist_interactive_filename)
 
     plt.show()
 
