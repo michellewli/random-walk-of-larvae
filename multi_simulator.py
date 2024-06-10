@@ -3,6 +3,7 @@ import numpy as np
 import random
 import csv
 from scipy.stats import truncnorm
+from scipy.interpolate import make_interp_spline
 from datetime import datetime
 import mpld3
 
@@ -145,7 +146,10 @@ def main():
                 prev_y = walker.y_positions[j]
 
             # Plot trajectory
-            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+            x_y_spline = make_interp_spline(walker.x_positions, walker.y_positions)
+            _x = np.linspace(walker.x_positions.min(), walker.y_positions.max(), 500)
+            _y = x_y_spline(_x)
+            plt.plot(_x, _y, label=f'Larva {i+1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
