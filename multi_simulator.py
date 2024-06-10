@@ -4,7 +4,6 @@ import random
 import csv
 from scipy.stats import truncnorm
 from datetime import datetime
-import os
 import mpld3
 
 # Helper function to generate truncated normal values
@@ -77,17 +76,6 @@ class LarvaWalker:
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
-def bezier_curve(points, n_points=100):
-    """
-    Calculate n_points on a Bezier curve defined by `points`.
-    """
-    t = np.linspace(0, 1, n_points)
-    n = len(points)
-    curve = np.zeros((n_points, 2))
-    for i in range(n):
-        curve += np.outer((1 - t)**(n - 1 - i) * t**i * np.math.comb(n - 1, i), points[i])
-    return curve
-
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
     T = int(input("Total time for experiment: "))  # total time in seconds
@@ -110,7 +98,6 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    os.makedirs('data', exist_ok=True)
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
@@ -157,11 +144,8 @@ def main():
                 prev_x = walker.x_positions[j]
                 prev_y = walker.y_positions[j]
 
-            # Create Bezier curve points
-            points = np.array([walker.x_positions, walker.y_positions]).T
-            bezier_points = bezier_curve(points, n_points=300)
-
-            plt.plot(bezier_points[:, 0], bezier_points[:, 1], label=f'Larva {i+1}', color=colors(i))
+            # Plot trajectory
+            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
@@ -171,10 +155,8 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
-    os.makedirs('histograms', exist_ok=True)
-    html_filename = f'histograms/larva_walk_{timestamp}.html'
-    mpld3.save_html(plt.gcf(), html_filename)
-    print(f'Interactive plot saved as {html_filename}')
+    interactive_filename = f'images/larva_path_{timestamp}.html'
+    mpld3.save_html(plt.gcf(), interactive_filename)
 
     plt.show()
 
@@ -192,9 +174,8 @@ def main():
     axs[1].set_ylabel('Frequency')
 
     # Save histograms as HTML using mpld3
-    hist_filename = f'histograms/larva_histograms_{timestamp}.html'
-    mpld3.save_html(fig, hist_filename)
-    print(f'Histogram saved as {hist_filename}')
+    hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
+    mpld3.save_html(fig, hist_interactive_filename)
 
     plt.show()
 
