@@ -3,7 +3,6 @@ import numpy as np
 import random
 import csv
 from scipy.stats import truncnorm
-from scipy.interpolate import interp1d
 from datetime import datetime
 import os
 import mpld3
@@ -78,6 +77,17 @@ class LarvaWalker:
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
+def bezier_curve(points, n_points=100):
+    """
+    Calculate n_points on a Bezier curve defined by `points`.
+    """
+    t = np.linspace(0, 1, n_points)
+    n = len(points)
+    curve = np.zeros((n_points, 2))
+    for i in range(n):
+        curve += np.outer((1 - t)**(n - 1 - i) * t**i * np.math.comb(n - 1, i), points[i])
+    return curve
+
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
     T = int(input("Total time for experiment: "))  # total time in seconds
@@ -147,19 +157,11 @@ def main():
                 prev_x = walker.x_positions[j]
                 prev_y = walker.y_positions[j]
 
-            # Interpolate trajectory for smooth plotting
-            x = np.array(walker.x_positions)
-            y = np.array(walker.y_positions)
-            t = np.linspace(0, 1, len(x))
-            t_new = np.linspace(0, 1, 300)  # Increase the number of points for smoothness
+            # Create Bezier curve points
+            points = np.array([walker.x_positions, walker.y_positions]).T
+            bezier_points = bezier_curve(points, n_points=300)
 
-            x_interpolator = interp1d(t, x, kind='cubic')
-            y_interpolator = interp1d(t, y, kind='cubic')
-
-            x_smooth = x_interpolator(t_new)
-            y_smooth = y_interpolator(t_new)
-
-            plt.plot(x_smooth, y_smooth, label=f'Larva {i+1}', color=colors(i))
+            plt.plot(bezier_points[:, 0], bezier_points[:, 1], label=f'Larva {i+1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
@@ -176,5 +178,25 @@ def main():
 
     plt.show()
 
-if __name__ == '__main__':
+    # Plot histograms of all speeds and angles
+    fig, axs = plt.subplots(1, 2, figsize=(12, 8))
+
+    axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
+    axs[0].set_title('Histogram of Speeds')
+    axs[0].set_xlabel('Speed (px/s)')
+    axs[0].set_ylabel('Frequency')
+
+    axs[1].hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
+    axs[1].set_title('Histogram of Angles')
+    axs[1].set_xlabel('Angle (radians)')
+    axs[1].set_ylabel('Frequency')
+
+    # Save histograms as HTML using mpld3
+    hist_filename = f'histograms/larva_histograms_{timestamp}.html'
+    mpld3.save_html(fig, hist_filename)
+    print(f'Histogram saved as {hist_filename}')
+
+    plt.show()
+
+if __name__ == "__main__":
     main()
