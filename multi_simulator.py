@@ -3,8 +3,9 @@ import numpy as np
 import random
 import csv
 from scipy.stats import truncnorm
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
 from datetime import datetime
+import os
 import mpld3
 
 # Helper function to generate truncated normal values
@@ -99,6 +100,7 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    os.makedirs('data', exist_ok=True)
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
@@ -145,11 +147,19 @@ def main():
                 prev_x = walker.x_positions[j]
                 prev_y = walker.y_positions[j]
 
-            # Plot trajectory
-            x_y_spline = make_interp_spline(walker.x_positions, walker.y_positions)
-            _x = np.linspace(walker.x_positions.min(), walker.y_positions.max(), 500)
-            _y = x_y_spline(_x)
-            plt.plot(_x, _y, label=f'Larva {i+1}', color=colors(i))
+            # Interpolate trajectory for smooth plotting
+            x = np.array(walker.x_positions)
+            y = np.array(walker.y_positions)
+            t = np.linspace(0, 1, len(x))
+            t_new = np.linspace(0, 1, 300)  # Increase the number of points for smoothness
+
+            x_interpolator = interp1d(t, x, kind='cubic')
+            y_interpolator = interp1d(t, y, kind='cubic')
+
+            x_smooth = x_interpolator(t_new)
+            y_smooth = y_interpolator(t_new)
+
+            plt.plot(x_smooth, y_smooth, label=f'Larva {i+1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
@@ -159,29 +169,12 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
-    interactive_filename = f'images/larva_path_{timestamp}.html'
-    mpld3.save_html(plt.gcf(), interactive_filename)
+    os.makedirs('histograms', exist_ok=True)
+    html_filename = f'histograms/larva_walk_{timestamp}.html'
+    mpld3.save_html(plt.gcf(), html_filename)
+    print(f'Interactive plot saved as {html_filename}')
 
     plt.show()
 
-    # Plot histograms of all speeds and angles
-    fig, axs = plt.subplots(1, 2, figsize=(12, 8))
-
-    axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
-    axs[0].set_title('Histogram of Speeds')
-    axs[0].set_xlabel('Speed (px/s)')
-    axs[0].set_ylabel('Frequency')
-
-    axs[1].hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
-    axs[1].set_title('Histogram of Angles')
-    axs[1].set_xlabel('Angle (radians)')
-    axs[1].set_ylabel('Frequency')
-
-    # Save histograms as HTML using mpld3
-    hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
-    mpld3.save_html(fig, hist_interactive_filename)
-
-    plt.show()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
