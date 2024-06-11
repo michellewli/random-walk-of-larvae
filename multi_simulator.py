@@ -32,7 +32,7 @@ class LarvaWalker:
 
     def simulate(self):
         elapsed_time = 0
-        for _ in np.arange(0, int(self.T), self.time_step):
+        while elapsed_time <= self.T:
             elapsed_time += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
@@ -61,6 +61,10 @@ class LarvaWalker:
 
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
+
+                # pause time for turn
+                turn_pause_time = random.randrange(1, 5)
+                elapsed_time += turn_pause_time
 
                 self.times.append(elapsed_time)  # Add the current elapsed time
                 # Append new position to the lists
