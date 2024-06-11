@@ -35,7 +35,7 @@ class LarvaWalker:
     def simulate(self):
         elapsed_time = 0
         timestamp = 0
-        while elapsed_time <= self.T:
+        while timestamp <= self.T:
             elapsed_time += self.time_step
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
@@ -67,7 +67,17 @@ class LarvaWalker:
                 self.num_turns += 1
 
                 # pause time for turn
-                turn_time = random.randrange(1, 5)
+                # Given values
+                mean = 4.3
+                standard_deviation = 8.5704
+                standard_error_of_mean = 0.084
+
+                # Calculate the rate parameter (lambda) for the exponential distribution
+                # The mean of an exponential distribution is equal to 1 / lambda
+                lambda_ = 1 / mean
+
+                # Generate random numbers from the exponential distribution using numpy
+                turn_time = np.random.exponential(scale=1 / lambda_)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
@@ -170,10 +180,26 @@ def main():
     interactive_filename = f'images/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
 
+    # Collect all turn_time values
+    all_turn_times = []
+    for walker in walkers:
+        all_turn_times.extend(walker.turn_times)
+
+    # Plot histogram of turn_time values
+    fig, axs = plt.subplots(figsize=(8, 6))
+    axs.hist(all_turn_times, bins=30, color='orange', edgecolor='black', alpha=0.7)
+    axs.set_title('Histogram of Turn Times')
+    axs.set_xlabel('Turn Time (seconds)')
+    axs.set_ylabel('Frequency')
+    axs.grid(True)
     plt.show()
 
+    # Save histogram as HTML using mpld3
+    hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
+    mpld3.save_html(fig, hist_interactive_filename)
+
     # Plot histograms of all speeds and angles
-    fig, axs = plt.subplots(1, 2, figsize=(12, 8))
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
     axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
     axs[0].set_title('Histogram of Speeds')
@@ -185,11 +211,10 @@ def main():
     axs[1].set_xlabel('Angle (radians)')
     axs[1].set_ylabel('Frequency')
 
-    # Save histograms as HTML using mpld3
+    plt.show()
+
     hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
-
-    plt.show()
 
 if __name__ == "__main__":
     main()
