@@ -67,7 +67,17 @@ class LarvaWalker:
                 self.num_turns += 1
 
                 # pause time for turn
-                turn_time = random.randrange(1, 5)
+                # Given values
+                mean = 4.3
+                standard_deviation = 8.5704
+                standard_error_of_mean = 0.084
+
+                # Calculate the rate parameter (lambda) for the exponential distribution
+                # The mean of an exponential distribution is equal to 1 / lambda
+                lambda_ = 1 / mean
+
+                # Generate random numbers from the exponential distribution using numpy
+                turn_time = np.random.exponential(scale=1 / lambda_)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
@@ -172,8 +182,25 @@ def main():
 
     plt.show()
 
+    # Collect all turn_time values
+    all_turn_times = []
+    for walker in walkers:
+        all_turn_times.extend(walker.turn_times)
+
+    # Plot histogram of turn_time values
+    fig, axs = plt.figure(figsize=(8, 6))
+    plt.hist(all_turn_times, bins=30, color='orange', edgecolor='black', alpha=0.7)
+    plt.title('Histogram of Turn Times')
+    plt.xlabel('Turn Time (seconds)')
+    plt.ylabel('Frequency')
+    plt.grid(True)
+    plt.show()
+    # Save histograms as HTML using mpld3
+    hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
+    mpld3.save_html(fig, hist_interactive_filename)
+
     # Plot histograms of all speeds and angles
-    fig, axs = plt.subplots(1, 2, figsize=(12, 8))
+    fig, axs = plt.subplots(1, 2, figsize=(6, 4))
 
     axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
     axs[0].set_title('Histogram of Speeds')
