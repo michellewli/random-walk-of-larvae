@@ -73,7 +73,7 @@ class LarvaWalker:
                 lambda_ = 1 / mean
 
                 # Generate random numbers from the exponential distribution using numpy
-                turn_time = np.random.exponential(scale=1 / lambda_)
+                turn_time = np.clip(np.random.exponential(scale=1 / lambda_), a_min=0, a_max=15)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
