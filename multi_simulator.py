@@ -30,7 +30,7 @@ class LarvaWalker:
         self.angles = [self.angle]  # initialize with the starting angle in radians
         self.times = [0]  # start time at 0
         self.timestamps = [0]  # track timestamps including turn times
-        self.turn_pause_times = []  # track individual turn times
+        self.turn_times = []  # track individual turn times
 
     def simulate(self):
         elapsed_time = 0
@@ -67,9 +67,9 @@ class LarvaWalker:
                 self.num_turns += 1
 
                 # pause time for turn
-                turn_pause_time = random.randrange(1, 5)
-                self.turn_pause_times.append(turn_pause_time)
-                timestamp += turn_pause_time
+                turn_time = random.randrange(1, 5)
+                self.turn_times.append(turn_time)
+                timestamp += turn_time
 
                 self.times.append(elapsed_time)  # Add the current elapsed time
                 self.timestamps.append(timestamp)  # Add the current timestamp including turn time
@@ -124,7 +124,7 @@ def main():
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
                 runL = walker.speeds[j-1] * walker.time_step
-                runT = walker.timestamps[j] - prev_timestamp - walker.turn_pause_times[j - 1]  # Total time w/o turn time
+                runT = walker.timestamps[j] - prev_timestamp - walker.turn_times[j - 1]  # Total time w/o turn time
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = walker.x_positions[j]
