@@ -29,11 +29,15 @@ class LarvaWalker:
         self.speeds = []
         self.angles = [self.angle]  # initialize with the starting angle in radians
         self.times = [0]  # start time at 0
+        self.timestamps = [0]  # track timestamps including turn times
+        self.turn_pause_times = []  # track individual turn times
 
     def simulate(self):
         elapsed_time = 0
-        for _ in np.arange(0, int(self.T), self.time_step):
+        timestamp = 0
+        while elapsed_time <= self.T:
             elapsed_time += self.time_step
+            timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
             v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
@@ -62,7 +66,13 @@ class LarvaWalker:
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
 
+                # pause time for turn
+                turn_pause_time = random.randrange(1, 5)
+                self.turn_pause_times.append(turn_pause_time)
+                timestamp += turn_pause_time
+
                 self.times.append(elapsed_time)  # Add the current elapsed time
+                self.timestamps.append(timestamp)  # Add the current timestamp including turn time
                 # Append new position to the lists
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
@@ -109,11 +119,12 @@ def main():
             prev_angle = walker.angles[0]
             prev_x = walker.x_positions[0]
             prev_y = walker.y_positions[0]
+            prev_timestamp = walker.timestamps[0]
             for j in range(1, len(walker.x_positions)):
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
                 runL = walker.speeds[j-1] * walker.time_step
-                runT = walker.times[j] - walker.times[j - 1]
+                runT = walker.timestamps[j] - prev_timestamp - walker.turn_pause_times[j - 1]  # Total time w/o turn time
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = walker.x_positions[j]
@@ -123,7 +134,7 @@ def main():
                     'set': 1,
                     'expt': 1,
                     'track': i + 1,
-                    'time0': walker.times[j],  # Use the elapsed time for time0
+                    'time0': walker.timestamps[j],  # Use the timestamp including turn time for time0
                     'reoYN': 1,
                     'runQ': runQ,
                     'runL': runL,
@@ -143,6 +154,7 @@ def main():
                 prev_angle = current_angle
                 prev_x = walker.x_positions[j]
                 prev_y = walker.y_positions[j]
+                prev_timestamp = walker.timestamps[j]
 
             # Plot trajectory
             plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
