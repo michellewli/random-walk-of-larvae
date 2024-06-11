@@ -33,10 +33,8 @@ class LarvaWalker:
         self.turn_times = []  # track individual turn times
 
     def simulate(self):
-        elapsed_time = 0
         timestamp = 0
         while timestamp <= self.T:
-            elapsed_time += self.time_step
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
@@ -69,19 +67,16 @@ class LarvaWalker:
                 # pause time for turn
                 # Given values
                 mean = 4.3
-                standard_deviation = 8.5704
-                standard_error_of_mean = 0.084
 
                 # Calculate the rate parameter (lambda) for the exponential distribution
                 # The mean of an exponential distribution is equal to 1 / lambda
                 lambda_ = 1 / mean
 
                 # Generate random numbers from the exponential distribution using numpy
-                turn_time = np.random.exponential(scale=1 / lambda_)
+                turn_time = np.clip(np.random.exponential(scale=1 / lambda_), a_min=0, a_max=15)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
-                self.times.append(elapsed_time)  # Add the current elapsed time
                 self.timestamps.append(timestamp)  # Add the current timestamp including turn time
                 # Append new position to the lists
                 self.x_positions.append(self.x)
