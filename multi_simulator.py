@@ -213,5 +213,8 @@ def main():
 
     plt.show()
 
+    hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
+    mpld3.save_html(fig, hist_interactive_filename)
+
 if __name__ == "__main__":
     main()
