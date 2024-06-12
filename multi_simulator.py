@@ -65,14 +65,8 @@ class LarvaWalker:
                 self.num_turns += 1
 
                 # pause time for turn
-                # Given values
                 mean = 4.3
-
-                # Calculate the rate parameter (lambda) for the exponential distribution
-                # The mean of an exponential distribution is equal to 1 / lambda
                 lambda_ = 1 / mean
-
-                # Generate random numbers from the exponential distribution using numpy
                 turn_time = np.clip(np.random.exponential(scale=1 / lambda_), a_min=0, a_max=15)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
@@ -82,12 +76,38 @@ class LarvaWalker:
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
-            else:  # will go straight
+            else:  # will go straight (curved in our new implementation)
                 self.num_runs += 1
 
-                # Update position without turning
-                self.x += v0 * np.cos(self.angle) * self.time_step
-                self.y += v0 * np.sin(self.angle) * self.time_step
+                # Calculate the curved path
+                run_efficiency = get_truncated_normal(mean=0.81208, std_dev=0.19461)
+                curved_distance = v0 * self.time_step
+                shortest_distance = run_efficiency * curved_distance
+
+                # If run_efficiency is greater than 1 or negative, set it within realistic bounds
+                if run_efficiency > 1 or run_efficiency < 0:
+                    run_efficiency = max(0, min(run_efficiency, 1))
+
+                # Calculating the curvature angle per step
+                if run_efficiency < 1:
+                    curvature_angle = (1 - run_efficiency) * curved_distance / self.time_step
+                else:
+                    curvature_angle = 0
+
+                segment_length = shortest_distance / int(self.time_step / 0.1)  # Number of small steps to approximate the curve
+
+                steps = int(self.time_step / 0.1)  # Number of small steps to approximate the curve
+
+                for _ in range(steps):
+                    self.angle += curvature_angle / steps  # Divide total curvature angle by the number of steps
+                    self.x += segment_length * np.cos(self.angle)
+                    self.y += segment_length * np.sin(self.angle)
+                    self.x_positions.append(self.x)
+                    self.y_positions.append(self.y)
+                    self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
+                    timestamp += 0.1
+                    self.timestamps.append(timestamp)  # Update the timestamps list with the current time
+                    self.speeds.append(v0)  # Append the speed for each step
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -126,10 +146,12 @@ def main():
             prev_y = walker.y_positions[0]
             prev_timestamp = walker.timestamps[0]
             for j in range(1, len(walker.x_positions)):
+                if j >= len(walker.angles) or j >= len(walker.timestamps):
+                    break
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
-                runL = walker.speeds[j-1] * walker.time_step
-                runT = walker.timestamps[j] - prev_timestamp - walker.turn_times[j - 1]  # Total time w/o turn time
+                runL = walker.speeds[j] * walker.time_step
+                runT = walker.timestamps[j] - prev_timestamp - (walker.turn_times[j - 1] if j - 1 < len(walker.turn_times) else 0)  # Total time w/o turn time
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = walker.x_positions[j]
@@ -148,7 +170,7 @@ def main():
                     'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
-                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                                        'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'runQ0': prev_angle,
                     'runX0': runX0,
                     'runY0': runY0,
@@ -213,3 +235,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
