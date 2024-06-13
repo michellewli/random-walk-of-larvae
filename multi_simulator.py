@@ -5,6 +5,7 @@ import csv
 from scipy.stats import truncnorm
 from datetime import datetime
 import mpld3
+import os
 
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
@@ -34,8 +35,8 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        direction = True # automatically will choose to drift right, making can incorporate handedness to variable
-        drift_rate = 0 # starts off as zero
+        drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # small drift rate to avoid circular loops
+        direction = True  # automatically will choose to drift right, making can incorporate handedness to variable
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -82,26 +83,20 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)
+                drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # reset drift rate after each turn
 
-            else:  # will go straight (curved in our new implementation)
+            else:  # will go straight (with slight drift)
                 self.num_runs += 1
 
-                curvature_angle = drift_rate * self.time_step  # Scale curvature for drifting effect
-                steps = int(self.time_step / 0.1)  # Number of small steps to approximate the curve
-                for _ in range(steps):
-                    if direction:
-                        self.angle += curvature_angle / steps
-                    else:
-                        self.angle -= curvature_angle / steps
-                    self.x += v0 * np.cos(self.angle) * (self.time_step / steps)
-                    self.y += v0 * np.sin(self.angle) * (self.time_step / steps)
-                    self.x_positions.append(self.x)
-                    self.y_positions.append(self.y)
-                    self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
-                    timestamp += self.time_step / steps
-                    self.timestamps.append(timestamp)  # Update the timestamps list with the current time
-                    self.speeds.append(v0)  # Append the speed for each step
+                drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
+
+                self.angle += drift_angle if direction else -drift_angle
+                self.x += v0 * np.cos(self.angle) * self.time_step
+                self.y += v0 * np.sin(self.angle) * self.time_step
+                self.x_positions.append(self.x)
+                self.y_positions.append(self.y)
+                self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
+                self.timestamps.append(timestamp)  # Update the timestamps list with the current time
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -127,6 +122,7 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    os.makedirs('data', exist_ok=True)
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
@@ -140,7 +136,7 @@ def main():
             prev_y = walker.y_positions[0]
             prev_timestamp = walker.timestamps[0]
             for j in range(1, len(walker.x_positions)):
-                if j >= len(walker.angles) or j >= len(walker.timestamps):
+                if j >= len(walker.angles) or j >= len(walker.timestamps) or j >= len(walker.speeds):
                     break
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
@@ -164,7 +160,7 @@ def main():
                     'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
-                                        'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'runQ0': prev_angle,
                     'runX0': runX0,
                     'runY0': runY0,
@@ -188,6 +184,7 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
+    os.makedirs('simulations', exist_ok=True)
     interactive_filename = f'simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
 
@@ -206,6 +203,7 @@ def main():
     plt.show()
 
     # Save histogram as HTML using mpld3
+    os.makedirs('histograms', exist_ok=True)
     hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
 
