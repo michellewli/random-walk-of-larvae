@@ -34,6 +34,9 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
+        direction = True # automatically will choose to drift right, making can incorporate handedness to variable
+        drift_rate = 0 # starts off as zero
+
         while timestamp <= self.T:
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
@@ -58,8 +61,10 @@ class LarvaWalker:
                 reference_angle = np.radians(get_truncated_normal(mean=66.501, std_dev=36.874))  # angle in radians
                 if left_or_right < prob_left_right:  # if random number is <0.5, go left
                     self.angle += reference_angle  # turn left by reference angle
+                    direction = False
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
+                    direction = True
 
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
@@ -76,36 +81,25 @@ class LarvaWalker:
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
+                # pick a drift rate (dtheta/dt)
+                drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)
+
             else:  # will go straight (curved in our new implementation)
                 self.num_runs += 1
 
-                # Calculate the curved path
-                run_efficiency = get_truncated_normal(mean=0.81208, std_dev=0.19461)
-                curved_distance = v0 * self.time_step
-                shortest_distance = run_efficiency * curved_distance
-
-                # If run_efficiency is greater than 1 or negative, set it within realistic bounds
-                if run_efficiency > 1 or run_efficiency < 0:
-                    run_efficiency = max(0, min(run_efficiency, 1))
-
-                # Calculating the curvature angle per step
-                if run_efficiency < 1:
-                    curvature_angle = (1 - run_efficiency) * curved_distance / self.time_step
-                else:
-                    curvature_angle = 0
-
-                segment_length = shortest_distance / int(self.time_step / 0.1)  # Number of small steps to approximate the curve
-
+                curvature_angle = drift_rate * self.time_step  # Scale curvature for drifting effect
                 steps = int(self.time_step / 0.1)  # Number of small steps to approximate the curve
-
                 for _ in range(steps):
-                    self.angle += curvature_angle / steps  # Divide total curvature angle by the number of steps
-                    self.x += segment_length * np.cos(self.angle)
-                    self.y += segment_length * np.sin(self.angle)
+                    if direction:
+                        self.angle += curvature_angle / steps
+                    else:
+                        self.angle -= curvature_angle / steps
+                    self.x += v0 * np.cos(self.angle) * (self.time_step / steps)
+                    self.y += v0 * np.sin(self.angle) * (self.time_step / steps)
                     self.x_positions.append(self.x)
                     self.y_positions.append(self.y)
                     self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
-                    timestamp += 0.1
+                    timestamp += self.time_step / steps
                     self.timestamps.append(timestamp)  # Update the timestamps list with the current time
                     self.speeds.append(v0)  # Append the speed for each step
 
@@ -194,7 +188,7 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
-    interactive_filename = f'images/larva_path_{timestamp}.html'
+    interactive_filename = f'simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
 
     # Collect all turn_time values
@@ -235,4 +229,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
