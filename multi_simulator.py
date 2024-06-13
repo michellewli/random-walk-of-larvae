@@ -5,6 +5,7 @@ import csv
 from scipy.stats import truncnorm
 from datetime import datetime
 import mpld3
+import os
 
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
@@ -34,6 +35,9 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
+        drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # small drift rate to avoid circular loops
+        direction = True  # automatically will choose to drift right, making can incorporate handedness to variable
+
         while timestamp <= self.T:
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
@@ -58,8 +62,10 @@ class LarvaWalker:
                 reference_angle = np.radians(get_truncated_normal(mean=66.501, std_dev=36.874))  # angle in radians
                 if left_or_right < prob_left_right:  # if random number is <0.5, go left
                     self.angle += reference_angle  # turn left by reference angle
+                    direction = False
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
+                    direction = True
 
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
@@ -76,38 +82,24 @@ class LarvaWalker:
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
-            else:  # will go straight (curved in our new implementation)
+                # pick a drift rate (dtheta/dt)
+                drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # reset drift rate after each turn
+
+            else:  # will go straight (with slight drift)
                 self.num_runs += 1
 
-                # Calculate the curved path
-                run_efficiency = get_truncated_normal(mean=0.81208, std_dev=0.19461)
-                curved_distance = v0 * self.time_step
-                shortest_distance = run_efficiency * curved_distance
+                drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
 
-                # If run_efficiency is greater than 1 or negative, set it within realistic bounds
-                if run_efficiency > 1 or run_efficiency < 0:
-                    run_efficiency = max(0, min(run_efficiency, 1))
-
-                # Calculating the curvature angle per step
-                if run_efficiency < 1:
-                    curvature_angle = (1 - run_efficiency) * curved_distance / self.time_step
+                if direction:
+                    self.angle += drift_angle
                 else:
-                    curvature_angle = 0
-
-                segment_length = shortest_distance / int(self.time_step / 0.1)  # Number of small steps to approximate the curve
-
-                steps = int(self.time_step / 0.1)  # Number of small steps to approximate the curve
-
-                for _ in range(steps):
-                    self.angle += curvature_angle / steps  # Divide total curvature angle by the number of steps
-                    self.x += segment_length * np.cos(self.angle)
-                    self.y += segment_length * np.sin(self.angle)
-                    self.x_positions.append(self.x)
-                    self.y_positions.append(self.y)
-                    self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
-                    timestamp += 0.1
-                    self.timestamps.append(timestamp)  # Update the timestamps list with the current time
-                    self.speeds.append(v0)  # Append the speed for each step
+                    self.angle -= drift_angle
+                self.x += v0 * np.cos(self.angle) * self.time_step
+                self.y += v0 * np.sin(self.angle) * self.time_step
+                self.x_positions.append(self.x)
+                self.y_positions.append(self.y)
+                self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
+                self.timestamps.append(timestamp)  # Update the timestamps list with the current time
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -133,6 +125,7 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    os.makedirs('data', exist_ok=True)
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
@@ -146,7 +139,7 @@ def main():
             prev_y = walker.y_positions[0]
             prev_timestamp = walker.timestamps[0]
             for j in range(1, len(walker.x_positions)):
-                if j >= len(walker.angles) or j >= len(walker.timestamps):
+                if j >= len(walker.angles) or j >= len(walker.timestamps) or j >= len(walker.speeds):
                     break
                 current_angle = walker.angles[j]
                 runQ = current_angle - prev_angle
@@ -170,7 +163,7 @@ def main():
                     'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'reoQ1': prev_angle,
                     'reoQ2': current_angle,
-                                        'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'runQ0': prev_angle,
                     'runX0': runX0,
                     'runY0': runY0,
@@ -194,7 +187,8 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
-    interactive_filename = f'images/larva_path_{timestamp}.html'
+    os.makedirs('simulations', exist_ok=True)
+    interactive_filename = f'simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
 
     # Collect all turn_time values
@@ -212,6 +206,7 @@ def main():
     plt.show()
 
     # Save histogram as HTML using mpld3
+    os.makedirs('histograms', exist_ok=True)
     hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
 
@@ -235,4 +230,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
