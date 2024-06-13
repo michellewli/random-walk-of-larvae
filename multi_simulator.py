@@ -90,7 +90,10 @@ class LarvaWalker:
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
 
-                self.angle += drift_angle if direction else -drift_angle
+                if direction:
+                    self.angle += drift_angle
+                else:
+                    self.angle -= drift_angle
                 self.x += v0 * np.cos(self.angle) * self.time_step
                 self.y += v0 * np.sin(self.angle) * self.time_step
                 self.x_positions.append(self.x)
