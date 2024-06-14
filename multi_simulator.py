@@ -7,10 +7,12 @@ from datetime import datetime
 import mpld3
 import os
 
+
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
+
 
 class LarvaWalker:
     def __init__(self, N, T, time_step, handedness=0):
@@ -35,7 +37,7 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)  # small drift rate to avoid circular loops
+        drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
         while timestamp <= self.T:
@@ -83,7 +85,7 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)  # reset drift rate after each turn
+                drift_rate = get_truncated_normal(mean=0.406780315, std_dev=2.202924)  # resets after each turn
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
@@ -102,6 +104,7 @@ class LarvaWalker:
                 self.timestamps.append(timestamp)  # Update the timestamps list with the current time
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
+
 
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
@@ -129,7 +132,8 @@ def main():
     csv_filename = f'data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Column1', 'set', 'expt', 'track', 'time0', 'reoYN', 'runQ', 'runL', 'runT', 'runX', 'reo#HS', 'reoQ1', 'reoQ2', 'reoHS1', 'runQ0', 'runX0', 'runY0', 'runX1', 'runY1']
+        fieldnames = ['Column1', 'set', 'expt', 'track', 'time0', 'reoYN', 'runQ', 'runL', 'runT', 'runX', 'reo#HS',
+                      'reoQ1', 'reoQ2', 'reoHS1', 'runQ0', 'runX0', 'runY0', 'runX1', 'runY1']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -227,6 +231,7 @@ def main():
 
     hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
+
 
 if __name__ == "__main__":
     main()
