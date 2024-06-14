@@ -35,8 +35,8 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # small drift rate to avoid circular loops
-        direction = True  # automatically will choose to drift right, making can incorporate handedness to variable
+        drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)  # small drift rate to avoid circular loops
+        direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -83,7 +83,7 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = get_truncated_normal(mean=0.01, std_dev=0.005)  # reset drift rate after each turn
+                drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)  # reset drift rate after each turn
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
