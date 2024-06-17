@@ -13,12 +13,12 @@ def get_truncated_normal(mean, std_dev, lower_bound=0):
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
 class LarvaWalker:
-    def __init__(self, N, T, time_step, handedness=0):
+    def __init__(self, N, T, time_step, bias=0):
         self.N = N
         self.T = T
         self.time_step = time_step
-        self.handedness = handedness
-        self.turning_probability = ((N / T) / time_step) + self.handedness
+        self.bias = bias
+        self.turning_probability = (N / T) / time_step
         self.x, self.y = 0.0, 0.0
         self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
         self.x_positions = [self.x]  # starting x position
@@ -36,7 +36,7 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = get_truncated_normal(mean=0.406780315, std_dev=2.202924)
+        drift_rate = np.random.exponential(scale=1/0.406780315)
         self.drift_rates.append(drift_rate)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
@@ -57,7 +57,7 @@ class LarvaWalker:
                 self.turn_points_y.append(self.y)
 
                 # Determine direction of turn
-                prob_left_right = 0.5  # probability of left or right is 1/2 or 5/10
+                prob_left_right = 0.5 + self.bias  # probability of left or right is 1/2 +/- bias
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
@@ -84,7 +84,7 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = np.random.exponential(scale=1/0.406780315) # resets after each turn
+                drift_rate = np.random.exponential(scale=1/0.406780315)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
             else:  # will go straight (with slight drift)
