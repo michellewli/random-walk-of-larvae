@@ -37,7 +37,7 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = get_truncated_normal(mean=0.404098503, std_dev=2.195897)
+        drift_rate = get_truncated_normal(mean=0.406780315, std_dev=2.202924)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
         while timestamp <= self.T:
