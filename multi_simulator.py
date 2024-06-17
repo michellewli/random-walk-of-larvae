@@ -7,12 +7,10 @@ from datetime import datetime
 import mpld3
 import os
 
-
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean, std_dev, lower_bound=0):
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
-
 
 class LarvaWalker:
     def __init__(self, N, T, time_step, handedness=0):
@@ -76,8 +74,7 @@ class LarvaWalker:
 
                 # pause time for turn
                 mean = 4.3
-                lambda_ = 1 / mean
-                turn_time = np.clip(np.random.exponential(scale=1 / lambda_), a_min=0, a_max=15)
+                turn_time = np.random.exponential(scale=mean)
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
@@ -87,7 +84,7 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = np.clip(np.random.exponential(scale=(1 / 0.406780315)), a_min=0, a_max=5) # resets after each turn
+                drift_rate = np.random.exponential(scale=1/0.406780315) # resets after each turn
                 self.drift_rates.append(drift_rate)
 
             else:  # will go straight (with slight drift)
@@ -107,7 +104,6 @@ class LarvaWalker:
                 self.timestamps.append(timestamp)  # Update the timestamps list with the current time
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
-
 
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
@@ -186,7 +182,7 @@ def main():
                 prev_timestamp = walker.timestamps[j]
 
             # Plot trajectory
-            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i+1}', color=colors(i))
+            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i + 1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
