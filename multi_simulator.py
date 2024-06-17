@@ -34,10 +34,12 @@ class LarvaWalker:
         self.times = [0]  # start time at 0
         self.timestamps = [0]  # track timestamps including turn times
         self.turn_times = []  # track individual turn times
+        self.drift_rates = []  # track drift rates
 
     def simulate(self):
         timestamp = 0
         drift_rate = get_truncated_normal(mean=0.406780315, std_dev=2.202924)
+        self.drift_rates.append(drift_rate)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
         while timestamp <= self.T:
@@ -85,7 +87,8 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = get_truncated_normal(mean=0.406780315, std_dev=2.202924)  # resets after each turn
+                drift_rate = np.clip(np.random.exponential(scale=(1 / 0.406780315)), a_min=0, a_max=5) # resets after each turn
+                self.drift_rates.append(drift_rate)
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
@@ -115,12 +118,14 @@ def main():
     walkers = []
     all_speeds = []
     all_angles = []
+    all_drift_rates = []
     for _ in range(num_walkers):
         walker = LarvaWalker(N, T, time_step)
         walker.simulate()
         walkers.append(walker)
         all_speeds.extend(walker.speeds)
         all_angles.extend(walker.angles[1:])  # Exclude the initial angle from the list of angles for histogram
+        all_drift_rates.extend(walker.drift_rates)
 
     colors = plt.get_cmap('tab20', num_walkers)  # Use a colormap to generate distinct colors
 
@@ -214,8 +219,8 @@ def main():
     hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
 
-    # Plot histograms of all speeds and angles
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    # Plot histograms of all speeds, angles, and drift rates
+    fig, axs = plt.subplots(1, 3, figsize=(18, 6))
 
     axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
     axs[0].set_title('Histogram of Speeds')
@@ -226,6 +231,11 @@ def main():
     axs[1].set_title('Histogram of Angles')
     axs[1].set_xlabel('Angle (radians)')
     axs[1].set_ylabel('Frequency')
+
+    axs[2].hist(all_drift_rates, bins=30, color='red', edgecolor='black', alpha=0.7)
+    axs[2].set_title('Histogram of Drift Rates')
+    axs[2].set_xlabel('Drift Rate (radians/s)')
+    axs[2].set_ylabel('Frequency')
 
     plt.show()
 
