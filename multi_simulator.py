@@ -36,7 +36,7 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = np.random.exponential(scale=1/0.406780315)
+        drift_rate = np.random.exponential(scale=1/0.1515)
         self.drift_rates.append(drift_rate)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
