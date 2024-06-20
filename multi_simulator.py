@@ -6,14 +6,15 @@ from scipy.stats import truncnorm
 from datetime import datetime
 import mpld3
 import os
+from typing import List, Tuple
 
 # Helper function to generate truncated normal values
-def get_truncated_normal(mean, std_dev, lower_bound=0):
+def get_truncated_normal(mean: float, std_dev: float, lower_bound: float = 0) -> float:
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
 class LarvaWalker:
-    def __init__(self, N, T, time_step, bias=0):
+    def __init__(self, N: int, T: int, time_step: float, bias: float = 0):
         self.N = N
         self.T = T
         self.time_step = time_step
@@ -34,7 +35,7 @@ class LarvaWalker:
         self.turn_times = []  # track individual turn times
         self.drift_rates = []  # track drift rates
 
-    def simulate(self):
+    def simulate(self) -> Tuple[List[float], List[float], List[float], List[float]]:
         timestamp = 0
         lambda_ = 10
         drift_rate = np.random.exponential(scale=1/lambda_)
@@ -58,7 +59,7 @@ class LarvaWalker:
                 self.turn_points_y.append(self.y)
 
                 # Determine direction of turn
-                prob_left_right = 0.5 + self.bias  # probability of left or right is 1/2 +/- bias
+                prob_left_right = 0.5 if self.bias == 0 else self.bias  # probability of left or right is 1/2 +/- bias
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
@@ -111,13 +112,14 @@ def main():
     T = int(input("Total time for experiment: "))  # total time in seconds
     time_step = float(input("Time step: "))  # in seconds
     num_walkers = int(input("How many larvae? "))  # number of larvae
+    bias = float(input("Left or right handed: "))  # larva preference to turn left or right
 
     walkers = []
     all_speeds = []
     all_angles = []
     all_drift_rates = []
     for _ in range(num_walkers):
-        walker = LarvaWalker(N, T, time_step)
+        walker = LarvaWalker(N, T, time_step, bias)
         walker.simulate()
         walkers.append(walker)
         all_speeds.extend(walker.speeds)
