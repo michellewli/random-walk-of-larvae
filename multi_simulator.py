@@ -36,7 +36,8 @@ class LarvaWalker:
 
     def simulate(self):
         timestamp = 0
-        drift_rate = np.random.exponential(scale=1/2.202924)
+        lambda_ = 10
+        drift_rate = np.random.exponential(scale=1/lambda_)
         self.drift_rates.append(drift_rate)
         direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
@@ -84,7 +85,7 @@ class LarvaWalker:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = np.random.exponential(scale=1/0.406780315)  # resets after each turn
+                drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
             else:  # will go straight (with slight drift)
