@@ -112,7 +112,7 @@ def main():
     T = int(input("Total time for experiment: "))  # total time in seconds
     time_step = float(input("Time step: "))  # in seconds
     num_walkers = int(input("How many larvae? "))  # number of larvae
-    bias = float(input("Left or right handed: "))  # larva preference to turn left or right
+    bias = float(input("Left or right handed: "))  # <0.5=left, >0.5=right, 0.5="normal"
 
     walkers = []
     all_speeds = []
