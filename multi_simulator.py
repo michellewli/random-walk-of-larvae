@@ -59,7 +59,7 @@ class LarvaWalker:
                 self.turn_points_y.append(self.y)
 
                 # Determine direction of turn
-                prob_left_right = 0.5 if self.bias == 0 else self.bias  # probability of left or right is 1/2 +/- bias
+                prob_left_right = 0.5 if self.bias == 0 else self.bias  # probability of left or right is 1/2 or bias %
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
