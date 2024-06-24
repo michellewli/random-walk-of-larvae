@@ -109,10 +109,10 @@ class LarvaWalker:
 
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
-    T = int(input("Total time for experiment: "))  # total time in seconds
-    time_step = float(input("Time step: "))  # in seconds
+    T = int(input("Total time for experiment (in seconds): "))  # total time in seconds
+    time_step = float(input("Time step (in seconds): "))  # in seconds
     num_walkers = int(input("How many larvae? "))  # number of larvae
-    bias = float(input("Left or right handed: "))  # <0.5=left, >0.5=right, 0.5="normal"
+    bias = float(input("Left or right handed (decimal [0.0, 1.0]: "))  # <0.5=left, >0.5=right, 0.5="normal"
 
     walkers = []
     all_speeds = []
