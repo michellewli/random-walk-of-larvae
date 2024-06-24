@@ -39,7 +39,7 @@ To run the larva simulation, you'll need to have Python installed on your system
 To start the simulation, run the following command:
 
    ```
-   python multi_simulator.py
+   python src/multi_simulator.py
    ```
 
 
