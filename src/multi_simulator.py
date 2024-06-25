@@ -40,7 +40,6 @@ class LarvaWalker:
         lambda_ = 10
         drift_rate = np.random.exponential(scale=1/lambda_)
         self.drift_rates.append(drift_rate)
-        direction = True  # automatically will choose to drift right, maybe can incorporate handedness to variable
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -59,17 +58,15 @@ class LarvaWalker:
                 self.turn_points_y.append(self.y)
 
                 # Determine direction of turn
-                prob_left_right = 0.5 if self.bias == 0 else self.bias  # probability of left or right is 1/2 or bias %
+                prob_left_right = self.bias  # probability of left or right is 1/2 or bias %
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
                 reference_angle = np.radians(get_truncated_normal(mean=66.501, std_dev=36.874))  # angle in radians
                 if left_or_right < prob_left_right:  # if random number is <0.5, go left
                     self.angle += reference_angle  # turn left by reference angle
-                    direction = False
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
-                    direction = True
 
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
@@ -94,7 +91,9 @@ class LarvaWalker:
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
 
-                if direction:
+                direction = random.randrange(0, 1)
+
+                if direction == 1:
                     self.angle += drift_angle
                 else:
                     self.angle -= drift_angle
@@ -132,8 +131,8 @@ def main():
 
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    os.makedirs('data', exist_ok=True)
-    csv_filename = f'data/larva_data_{timestamp}.csv'
+    os.makedirs('../data', exist_ok=True)
+    csv_filename = f'../data/larva_data_{timestamp}.csv'
 
     with open(csv_filename, mode='w', newline='') as csv_file:
         fieldnames = ['Column1', 'set', 'expt', 'track', 'time0', 'reoYN', 'runQ', 'runL', 'runT', 'runX', 'reo#HS',
@@ -195,8 +194,8 @@ def main():
     plt.grid(True)
 
     # Save interactive plot as HTML using mpld3
-    os.makedirs('simulations', exist_ok=True)
-    interactive_filename = f'simulations/larva_path_{timestamp}.html'
+    os.makedirs('../simulations', exist_ok=True)
+    interactive_filename = f'../simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
 
     # Collect all turn_time values
@@ -214,8 +213,8 @@ def main():
     plt.show()
 
     # Save histogram as HTML using mpld3
-    os.makedirs('histograms', exist_ok=True)
-    hist_interactive_filename = f'histograms/turn_time_histogram_{timestamp}.html'
+    os.makedirs('../histograms', exist_ok=True)
+    hist_interactive_filename = f'../histograms/turn_time_histogram_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
 
     # Plot histograms of all speeds, angles, and drift rates
@@ -238,7 +237,7 @@ def main():
 
     plt.show()
 
-    hist_interactive_filename = f'histograms/larva_histograms_{timestamp}.html'
+    hist_interactive_filename = f'../histograms/larva_histograms_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
 
 
