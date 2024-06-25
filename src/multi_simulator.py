@@ -24,14 +24,18 @@ class LarvaWalker:
         self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
+        self.plot_x_positions = [self.x]  # starting x position
+        self.plot_y_positions = [self.y]  # starting y position
         self.turn_points_x = []  # x coordinates of turn points
         self.turn_points_y = []  # y coordinates of turn points
         self.num_turns = 0
         self.num_runs = 0
         self.speeds = []
         self.angles = [self.angle]  # initialize with the starting angle in radians
+        self.plot_angles = [self.angle]
         self.times = [0]  # start time at 0
         self.timestamps = [0]  # track timestamps including turn times
+        self.plot_timestamps = [0]
         self.turn_times = []  # track individual turn times
         self.drift_rates = []  # track drift rates
 
@@ -40,6 +44,7 @@ class LarvaWalker:
         lambda_ = 10
         drift_rate = np.random.exponential(scale=1/lambda_)
         self.drift_rates.append(drift_rate)
+        direction = random.randrange(0, 2)
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -77,8 +82,11 @@ class LarvaWalker:
                 self.turn_times.append(turn_time)
                 timestamp += turn_time
 
-                self.timestamps.append(timestamp)  # Add the current timestamp including turn time
+                self.plot_timestamps.append(timestamp)  # Add the current timestamp including turn time
+                self.timestamps.append(timestamp)
                 # Append new position to the lists
+                self.plot_x_positions.append(self.x)
+                self.plot_y_positions.append(self.y)
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
@@ -86,12 +94,12 @@ class LarvaWalker:
                 drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
+                direction = random.randrange(0, 2)
+
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
-
-                direction = random.randrange(0, 1)
 
                 if direction == 1:
                     self.angle += drift_angle
@@ -99,10 +107,10 @@ class LarvaWalker:
                     self.angle -= drift_angle
                 self.x += v0 * np.cos(self.angle) * self.time_step
                 self.y += v0 * np.sin(self.angle) * self.time_step
-                self.x_positions.append(self.x)
-                self.y_positions.append(self.y)
-                self.angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
-                self.timestamps.append(timestamp)  # Update the timestamps list with the current time
+                self.plot_x_positions.append(self.x)
+                self.plot_y_positions.append(self.y)
+                self.plot_angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
+                self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
 
         return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
@@ -149,42 +157,43 @@ def main():
                 if j >= len(walker.angles) or j >= len(walker.timestamps) or j >= len(walker.speeds):
                     break
                 current_angle = walker.angles[j]
-                runQ = current_angle - prev_angle
-                runL = walker.speeds[j] * walker.time_step
-                runT = walker.timestamps[j] - prev_timestamp - (walker.turn_times[j - 1] if j - 1 < len(walker.turn_times) else 0)  # Total time w/o turn time
-                runX0 = prev_x
-                runY0 = prev_y
-                runX1 = walker.x_positions[j]
-                runY1 = walker.y_positions[j]
-                row = {
-                    'Column1': '',
-                    'set': 1,
-                    'expt': 1,
-                    'track': i + 1,
-                    'time0': walker.timestamps[j],  # Use the timestamp including turn time for time0
-                    'reoYN': 1,
-                    'runQ': runQ,
-                    'runL': runL,
-                    'runT': runT,
-                    'runX': runX1,
-                    'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
-                    'reoQ1': prev_angle,
-                    'reoQ2': current_angle,
-                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
-                    'runQ0': prev_angle,
-                    'runX0': runX0,
-                    'runY0': runY0,
-                    'runX1': runX1,
-                    'runY1': runY1
-                }
-                writer.writerow(row)
-                prev_angle = current_angle
-                prev_x = walker.x_positions[j]
-                prev_y = walker.y_positions[j]
-                prev_timestamp = walker.timestamps[j]
+                if current_angle != prev_angle:  # Log data only if there's a turn
+                    runQ = current_angle - prev_angle
+                    runL = walker.speeds[j] * walker.time_step
+                    runT = walker.timestamps[j] - prev_timestamp - (walker.turn_times[j - 1] if j - 1 < len(walker.turn_times) else 0)  # Total time w/o turn time
+                    runX0 = prev_x
+                    runY0 = prev_y
+                    runX1 = walker.x_positions[j]
+                    runY1 = walker.y_positions[j]
+                    row = {
+                        'Column1': '',
+                        'set': 1,
+                        'expt': 1,
+                        'track': i + 1,
+                        'time0': walker.timestamps[j],  # Use the timestamp including turn time for time0
+                        'reoYN': 1,
+                        'runQ': runQ,
+                        'runL': runL,
+                        'runT': runT,
+                        'runX': runX1,
+                        'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                        'reoQ1': prev_angle,
+                        'reoQ2': current_angle,
+                        'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                        'runQ0': prev_angle,
+                        'runX0': runX0,
+                        'runY0': runY0,
+                        'runX1': runX1,
+                        'runY1': runY1
+                    }
+                    writer.writerow(row)
+                    prev_angle = current_angle
+                    prev_x = walker.x_positions[j]
+                    prev_y = walker.y_positions[j]
+                    prev_timestamp = walker.timestamps[j]
 
             # Plot trajectory
-            plt.plot(walker.x_positions, walker.y_positions, label=f'Larva {i + 1}', color=colors(i))
+            plt.plot(walker.plot_x_positions, walker.plot_y_positions, label=f'Larva {i + 1}', color=colors(i))
             plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
