@@ -13,12 +13,13 @@ def get_truncated_normal(mean: float, std_dev: float, lower_bound: float = 0) ->
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
-class LarvaWalker:
-    def __init__(self, N: int, T: int, time_step: float, bias: float = 0):
+class Larva:
+    def __init__(self, N: int, T: int, time_step: float, turn_bias: float = 0, drift_bias: float = 0):
         self.N = N
         self.T = T
         self.time_step = time_step
-        self.bias = bias
+        self.turn_bias = turn_bias
+        self.drift_bias = drift_bias
         self.turning_probability = (N / T) / time_step
         self.x, self.y = 0.0, 0.0
         self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
@@ -44,7 +45,7 @@ class LarvaWalker:
         lambda_ = 10
         drift_rate = np.random.exponential(scale=1/lambda_)
         self.drift_rates.append(drift_rate)
-        direction = random.randrange(0, 2)
+        drift_left_or_right = random.random()
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -63,7 +64,7 @@ class LarvaWalker:
                 self.turn_points_y.append(self.y)
 
                 # Determine direction of turn
-                prob_left_right = self.bias  # probability of left or right is 1/2 or bias %
+                prob_left_right = self.turn_bias  # probability of left or right is 1/2 or bias %
                 left_or_right = random.random()  # random number to compare with probability of going left or right
 
                 # Angle at which larva will turn wrt the direction it's already facing
@@ -76,7 +77,7 @@ class LarvaWalker:
                 self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
                 self.num_turns += 1
 
-                # pause time for turn
+                # time it takes to pause and then make the turn
                 mean = 4.3
                 turn_time = np.random.exponential(scale=mean)
                 self.turn_times.append(turn_time)
@@ -94,14 +95,16 @@ class LarvaWalker:
                 drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
-                direction = random.randrange(0, 2)
+                drift_left_or_right = random.random()
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
 
-                if direction == 1:
+                prob_drift_left_or_right = self.drift_bias # probability of drifting left or right is the drift bias
+
+                if drift_left_or_right < prob_drift_left_or_right:
                     self.angle += drift_angle
                 else:
                     self.angle -= drift_angle
@@ -118,22 +121,23 @@ def main():
     N = int(input("Number of turns (N): "))  # number of turns
     T = int(input("Total time for experiment (in seconds): "))  # total time in seconds
     time_step = float(input("Time step (in seconds): "))  # in seconds
-    num_walkers = int(input("How many larvae? "))  # number of larvae
-    bias = float(input("Left or right handed (decimal [0.0, 1.0]: "))  # <0.5=left, >0.5=right, 0.5="normal"
+    num_larvae = int(input("How many larvae? "))  # number of larvae
+    turn_bias = float(input("Left or right handed turns (decimal [0.0, 1.0]): "))  # <0.5=left, >0.5=right, 0.5="normal"
+    drift_bias = float(input("Left or right handed drifts (decimal [0.0, 1.0]): "))  # same numerical representation ^
 
-    walkers = []
+    larvae = []
     all_speeds = []
     all_angles = []
     all_drift_rates = []
-    for _ in range(num_walkers):
-        walker = LarvaWalker(N, T, time_step, bias)
-        walker.simulate()
-        walkers.append(walker)
-        all_speeds.extend(walker.speeds)
-        all_angles.extend(walker.angles[1:])  # Exclude the initial angle from the list of angles for histogram
-        all_drift_rates.extend(walker.drift_rates)
+    for _ in range(num_larvae):
+        larva = Larva(N, T, time_step, turn_bias, drift_bias)
+        larva.simulate()
+        larvae.append(larva)
+        all_speeds.extend(larva.speeds)
+        all_angles.extend(larva.angles[1:])  # Exclude the initial angle from the list of angles for histogram
+        all_drift_rates.extend(larva.drift_rates)
 
-    colors = plt.get_cmap('tab20', num_walkers)  # Use a colormap to generate distinct colors
+    colors = plt.get_cmap('tab20', num_larvae)  # Use a colormap to generate distinct colors
 
     plt.figure(figsize=(10, 6))
 
@@ -148,29 +152,29 @@ def main():
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
-        for i, walker in enumerate(walkers):
-            prev_angle = walker.angles[0]
-            prev_x = walker.x_positions[0]
-            prev_y = walker.y_positions[0]
-            prev_timestamp = walker.timestamps[0]
-            for j in range(1, len(walker.x_positions)):
-                if j >= len(walker.angles) or j >= len(walker.timestamps) or j >= len(walker.speeds):
+        for i, larva in enumerate(larvae):
+            prev_angle = larva.angles[0]
+            prev_x = larva.x_positions[0]
+            prev_y = larva.y_positions[0]
+            prev_timestamp = larva.timestamps[0]
+            for j in range(1, len(larva.x_positions)):
+                if j >= len(larva.angles) or j >= len(larva.timestamps) or j >= len(larva.speeds):
                     break
-                current_angle = walker.angles[j]
+                current_angle = larva.angles[j]
                 if current_angle != prev_angle:  # Log data only if there's a turn
                     runQ = current_angle - prev_angle
-                    runL = walker.speeds[j] * walker.time_step
-                    runT = walker.timestamps[j] - prev_timestamp - (walker.turn_times[j - 1] if j - 1 < len(walker.turn_times) else 0)  # Total time w/o turn time
+                    runL = larva.speeds[j] * larva.time_step
+                    runT = larva.timestamps[j] - prev_timestamp - (larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)  # Total time w/o turn time
                     runX0 = prev_x
                     runY0 = prev_y
-                    runX1 = walker.x_positions[j]
-                    runY1 = walker.y_positions[j]
+                    runX1 = larva.x_positions[j]
+                    runY1 = larva.y_positions[j]
                     row = {
                         'Column1': '',
                         'set': 1,
                         'expt': 1,
                         'track': i + 1,
-                        'time0': walker.timestamps[j],  # Use the timestamp including turn time for time0
+                        'time0': larva.timestamps[j],  # Use the timestamp including turn time for time0
                         'reoYN': 1,
                         'runQ': runQ,
                         'runL': runL,
@@ -188,13 +192,13 @@ def main():
                     }
                     writer.writerow(row)
                     prev_angle = current_angle
-                    prev_x = walker.x_positions[j]
-                    prev_y = walker.y_positions[j]
-                    prev_timestamp = walker.timestamps[j]
+                    prev_x = larva.x_positions[j]
+                    prev_y = larva.y_positions[j]
+                    prev_timestamp = larva.timestamps[j]
 
             # Plot trajectory
-            plt.plot(walker.plot_x_positions, walker.plot_y_positions, label=f'Larva {i + 1}', color=colors(i))
-            plt.scatter(walker.turn_points_x, walker.turn_points_y, s=10, color=colors(i))
+            plt.plot(larva.plot_x_positions, larva.plot_y_positions, label=f'Larva {i + 1}', color=colors(i))
+            plt.scatter(larva.turn_points_x, larva.turn_points_y, s=10, color=colors(i))
 
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
@@ -209,8 +213,8 @@ def main():
 
     # Collect all turn_time values
     all_turn_times = []
-    for walker in walkers:
-        all_turn_times.extend(walker.turn_times)
+    for larva in larvae:
+        all_turn_times.extend(larva.turn_times)
 
     # Plot histogram of turn_time values
     fig, axs = plt.subplots(figsize=(8, 6))
