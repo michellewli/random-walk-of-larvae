@@ -6,7 +6,6 @@ from scipy.stats import truncnorm
 from datetime import datetime
 import mpld3
 import os
-from typing import List, Tuple
 
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean: float, std_dev: float, lower_bound: float = 0) -> float:
@@ -40,12 +39,12 @@ class Larva:
         self.turn_times = []  # track individual turn times
         self.drift_rates = []  # track drift rates
 
-    def simulate(self) -> Tuple[List[float], List[float], List[float], List[float]]:
+    def simulate(self):
         timestamp = 0
         lambda_ = 10
         drift_rate = np.random.exponential(scale=1/lambda_)
         self.drift_rates.append(drift_rate)
-        drift_left_or_right = random.random()
+        drift_left_or_right = random.random()  # picks a random number from [0.0, 1.0)
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -114,8 +113,6 @@ class Larva:
                 self.plot_y_positions.append(self.y)
                 self.plot_angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
                 self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
-
-        return self.x_positions, self.y_positions, self.turn_points_x, self.turn_points_y
 
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
@@ -212,9 +209,9 @@ def main():
     mpld3.save_html(plt.gcf(), interactive_filename)
 
     # Collect all turn_time values
-    all_turn_times = []
+    all_turn_times = np.array([])
     for larva in larvae:
-        all_turn_times.extend(larva.turn_times)
+        all_turn_times = np.append(all_turn_times, larva.turn_times)
 
     # Plot histogram of turn_time values
     fig, axs = plt.subplots(figsize=(8, 6))
@@ -252,7 +249,6 @@ def main():
 
     hist_interactive_filename = f'../histograms/larva_histograms_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
-
 
 if __name__ == "__main__":
     main()
