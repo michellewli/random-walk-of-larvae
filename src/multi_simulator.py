@@ -46,12 +46,12 @@ class Larva:
         self.drift_rates.append(drift_rate)
         drift_left_or_right = random.random()  # picks a random number from [0.0, 1.0)
 
+        v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
+        self.speeds.append(v0)
+
         while timestamp <= self.T:
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
-
-            v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
-            self.speeds.append(v0)
 
             if turn_or_not < self.turning_probability:  # will turn either left or right
                 # First, move to the current position based on the previous angle
@@ -95,6 +95,9 @@ class Larva:
                 self.drift_rates.append(drift_rate)
 
                 drift_left_or_right = random.random()
+
+                v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
+                self.speeds.append(v0)
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
