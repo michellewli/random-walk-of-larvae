@@ -46,8 +46,9 @@ class Larva:
         self.drift_rates.append(drift_rate)
         drift_left_or_right = random.random()  # picks a random number from [0.0, 1.0)
 
-        v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
+        v0 = get_truncated_normal(mean=2.847191967574795, std_dev=0.3518021717781707)  # speed of larva in px/s
         self.speeds.append(v0)
+        stdevi = get_truncated_normal(mean=0.3518021717781707, std_dev=0.1622577507017134)
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -91,13 +92,13 @@ class Larva:
                 self.y_positions.append(self.y)
 
                 # pick a drift rate (dtheta/dt)
-                drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
+                drift_rate = np.random.exponential(scale=1 / lambda_)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
                 drift_left_or_right = random.random()
 
-                v0 = get_truncated_normal(mean=2.9095, std_dev=0.7094)  # speed of larva in px/s
-                self.speeds.append(v0)
+                v = get_truncated_normal(mean=v0, std_dev=stdevi)  # speed of larva in px/s
+                self.speeds.append(v)
 
             else:  # will go straight (with slight drift)
                 self.num_runs += 1
