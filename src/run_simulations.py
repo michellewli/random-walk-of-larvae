@@ -14,8 +14,8 @@ def main():
     num_larvae = 1000
     drift_bias = 0.5
 
-    # Iterate over turn_bias values from 0 to 1 with 0.05 increments
-    for i in range(20):
+    # Iterate over turn_bias values from 0 to 1 with 0.05 increments, produces 21 simulations
+    for i in range(21):
         turn_bias = i * 0.05
         run_simulation(N, T, time_step, num_larvae, turn_bias, drift_bias)
 
