@@ -12,11 +12,11 @@ def main():
     T = 600
     time_step = 1
     num_larvae = 1000
-    turn_bias = 0.5
+    drift_bias = 0.5
 
     # Iterate over turn_bias values from 0 to 1 with 0.05 increments
     for i in range(20):
-        drift_bias = i * 0.05
+        turn_bias = i * 0.05
         run_simulation(N, T, time_step, num_larvae, turn_bias, drift_bias)
 
 
