@@ -20,7 +20,7 @@ class Larva:
         self.turn_bias = turn_bias
         self.drift_bias = drift_bias
         self.turning_probability = (N / T) / time_step
-        self.x, self.y = 0.0, 0.0
+        self.x, self.y = (2550 / 2), (1950 / 2)
         self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
@@ -145,12 +145,12 @@ def main():
     # Prepare CSV file
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     os.makedirs('../data', exist_ok=True)
-    csv_filename = f'../data/larva_data_{timestamp}.csv'
+    txt_filename = f'../data/larva_data_{timestamp}.txt'
 
-    with open(csv_filename, mode='w', newline='') as csv_file:
+    with open(txt_filename, mode='w', newline='') as txt_file:
         fieldnames = ['Column1', 'set', 'expt', 'track', 'time0', 'reoYN', 'runQ', 'runL', 'runT', 'runX', 'reo#HS',
                       'reoQ1', 'reoQ2', 'reoHS1', 'runQ0', 'runX0', 'runY0', 'runX1', 'runY1']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(txt_file, fieldnames=fieldnames)
         writer.writeheader()
 
         for i, larva in enumerate(larvae):
@@ -175,7 +175,7 @@ def main():
                         'set': 1,
                         'expt': 1,
                         'track': i + 1,
-                        'time0': larva.timestamps[j],  # Use the timestamp including turn time for time0
+                        'time0': larva.timestamps[j - 1],  # Use the timestamp including turn time for time0
                         'reoYN': 1,
                         'runQ': runQ,
                         'runL': runL,
