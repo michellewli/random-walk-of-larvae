@@ -30,8 +30,8 @@ class Larva:
         self.y_positions = [self.y]  # starting y position
         self.plot_x_positions = [self.x]  # starting x position
         self.plot_y_positions = [self.y]  # starting y position
-        self.turn_points_x = []  # x coordinates of turn points
-        self.turn_points_y = []  # y coordinates of turn points
+        self.turn_points_x = [self.x]  # x coordinates of turn points
+        self.turn_points_y = [self.y]  # y coordinates of turn points
         self.num_turns = 0
         self.num_runs = 0
         self.speeds = []
@@ -162,47 +162,46 @@ def main():
 
         for i, larva in enumerate(larvae):
             prev_angle = larva.angles[0]
-            prev_x = larva.x_positions[0]
-            prev_y = larva.y_positions[0]
+            prev_x = larva.turn_points_x[0]
+            prev_y = larva.turn_points_y[0]
             prev_timestamp = larva.timestamps[0]
-            for j in range(1, len(larva.x_positions)):
+            for j in range(1, len(larva.turn_points_x)):
                 if j >= len(larva.angles) or j >= len(larva.timestamps) or j >= len(larva.speeds):
                     break
                 current_angle = larva.angles[j]
-                if current_angle != prev_angle:  # Log data only if there's a turn
-                    runQ = current_angle - prev_angle
-                    runL = larva.speeds[j] * larva.time_step
-                    runT = larva.timestamps[j] - prev_timestamp - (larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)  # Total time w/o turn time
-                    runX0 = prev_x
-                    runY0 = prev_y
-                    runX1 = larva.x_positions[j]
-                    runY1 = larva.y_positions[j]
-                    row = {
-                        'Column1': '',
-                        'set': 1,
-                        'expt': 1,
-                        'track': i + 1,
-                        'time0': larva.timestamps[j - 1],  # Use the timestamp including turn time for time0
-                        'reoYN': 1,
-                        'runQ': runQ,
-                        'runL': runL,
-                        'runT': runT,
-                        'runX': runX1,
-                        'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
-                        'reoQ1': prev_angle,
-                        'reoQ2': current_angle,
-                        'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
-                        'runQ0': prev_angle,
-                        'runX0': runX0,
-                        'runY0': runY0,
-                        'runX1': runX1,
-                        'runY1': runY1
-                    }
-                    writer.writerow(row)
-                    prev_angle = current_angle
-                    prev_x = larva.x_positions[j]
-                    prev_y = larva.y_positions[j]
-                    prev_timestamp = larva.timestamps[j]
+                runQ = current_angle - prev_angle
+                runL = np.sqrt((larva.turn_points_x[j] - prev_x) ** 2 + (larva.turn_points_y[j] - prev_y) ** 2)
+                runT = larva.timestamps[j] - prev_timestamp - (larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)
+                runX0 = prev_x
+                runY0 = prev_y
+                runX1 = larva.turn_points_x[j]
+                runY1 = larva.turn_points_y[j]
+                row = {
+                    'Column1': '',
+                    'set': 1,
+                    'expt': 1,
+                    'track': i + 1,
+                    'time0': larva.timestamps[j - 1],
+                    'reoYN': 1,
+                    'runQ': runQ,
+                    'runL': runL,
+                    'runT': runT,
+                    'runX': runX1,
+                    'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                    'reoQ1': prev_angle,
+                    'reoQ2': current_angle,
+                    'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
+                    'runQ0': prev_angle,
+                    'runX0': runX0,
+                    'runY0': runY0,
+                    'runX1': runX1,
+                    'runY1': runY1
+                }
+                writer.writerow(row)
+                prev_angle = current_angle
+                prev_x = larva.turn_points_x[j]
+                prev_y = larva.turn_points_y[j]
+                prev_timestamp = larva.timestamps[j]
 
             # Plot trajectory
             plt.plot(larva.plot_x_positions, larva.plot_y_positions, label=f'Larva {i + 1}', color=colors(i))
