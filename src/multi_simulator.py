@@ -217,7 +217,7 @@ def main():
     os.makedirs('../simulations', exist_ok=True)
     interactive_filename = f'../simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
-
+    '''
     # Collect all turn_time values
     all_turn_times = np.array([])
     for larva in larvae:
@@ -259,6 +259,7 @@ def main():
 
     hist_interactive_filename = f'../histograms/larva_histograms_{timestamp}.html'
     mpld3.save_html(fig, hist_interactive_filename)
+    '''
 
 if __name__ == "__main__":
     main()
