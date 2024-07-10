@@ -12,6 +12,10 @@ def get_truncated_normal(mean: float, std_dev: float, lower_bound: float = 0) ->
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
+# Helper function to normalize angle between -π and π
+def normalize_angle(angle: float) -> float:
+    return (angle + np.pi) % (2 * np.pi) - np.pi
+
 class Larva:
     def __init__(self, N: int, T: int, time_step: float, turn_bias: float = 0, drift_bias: float = 0):
         self.N = N
@@ -21,7 +25,7 @@ class Larva:
         self.drift_bias = drift_bias
         self.turning_probability = (N / T) / time_step
         self.x, self.y = (2550 / 2), (1950 / 2)
-        self.angle = random.uniform(0, 2 * np.pi)  # initial angle in radians, 0 means facing right
+        self.angle = normalize_angle(random.uniform(0, 2 * np.pi))  # initial angle in radians
         self.x_positions = [self.x]  # starting x position
         self.y_positions = [self.y]  # starting y position
         self.plot_x_positions = [self.x]  # starting x position
@@ -74,7 +78,8 @@ class Larva:
                 else:  # if random number is >=0.5, go right
                     self.angle -= reference_angle  # turn right by reference angle
 
-                self.angles.append(self.angle % (2 * np.pi))  # Add the new angle after turning in radians
+                self.angle = normalize_angle(self.angle)  # Normalize the angle
+                self.angles.append(self.angle)  # Add the new angle after turning in radians
                 self.num_turns += 1
 
                 # time it takes to pause and then make the turn
@@ -111,11 +116,13 @@ class Larva:
                     self.angle += drift_angle
                 else:
                     self.angle -= drift_angle
+
+                self.angle = normalize_angle(self.angle)  # Normalize the angle
                 self.x += v0 * np.cos(self.angle) * self.time_step
                 self.y += v0 * np.sin(self.angle) * self.time_step
                 self.plot_x_positions.append(self.x)
                 self.plot_y_positions.append(self.y)
-                self.plot_angles.append(self.angle % (2 * np.pi))  # Update the angle list with the current angle
+                self.plot_angles.append(self.angle)  # Update the angle list with the current angle
                 self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
 
 def main():
