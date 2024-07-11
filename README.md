@@ -42,5 +42,9 @@ To start the simulation, run the following command:
    python src/multi_simulator.py
    ```
 
+To run multiple simulations, run the following command:
 
+    ```
+    python src/run_simulations.py
+    ```
 
