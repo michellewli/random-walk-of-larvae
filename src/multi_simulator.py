@@ -134,16 +134,10 @@ def main():
     drift_bias = float(input("Left or right handed drifts (decimal [0.0, 1.0]): "))  # same numerical representation ^
 
     larvae = []
-    all_speeds = []
-    all_angles = []
-    all_drift_rates = []
     for _ in range(num_larvae):
         larva = Larva(N, T, time_step, turn_bias, drift_bias)
         larva.simulate()
         larvae.append(larva)
-        all_speeds.extend(larva.speeds)
-        all_angles.extend(larva.angles[1:])  # Exclude the initial angle from the list of angles for histogram
-        all_drift_rates.extend(larva.drift_rates)
 
     colors = plt.get_cmap('tab20', num_larvae)  # Use a colormap to generate distinct colors
 
@@ -217,49 +211,6 @@ def main():
     os.makedirs('../simulations', exist_ok=True)
     interactive_filename = f'../simulations/larva_path_{timestamp}.html'
     mpld3.save_html(plt.gcf(), interactive_filename)
-    '''
-    # Collect all turn_time values
-    all_turn_times = np.array([])
-    for larva in larvae:
-        all_turn_times = np.append(all_turn_times, larva.turn_times)
-
-    # Plot histogram of turn_time values
-    fig, axs = plt.subplots(figsize=(8, 6))
-    axs.hist(all_turn_times, bins=30, color='orange', edgecolor='black', alpha=0.7)
-    axs.set_title('Histogram of Turn Times')
-    axs.set_xlabel('Turn Time (seconds)')
-    axs.set_ylabel('Frequency')
-    axs.grid(True)
-    plt.show()
-
-    # Save histogram as HTML using mpld3
-    os.makedirs('../histograms', exist_ok=True)
-    hist_interactive_filename = f'../histograms/turn_time_histogram_{timestamp}.html'
-    mpld3.save_html(fig, hist_interactive_filename)
-
-    # Plot histograms of all speeds, angles, and drift rates
-    fig, axs = plt.subplots(1, 3, figsize=(18, 6))
-
-    axs[0].hist(all_speeds, bins=30, color='blue', edgecolor='black', alpha=0.7)
-    axs[0].set_title('Histogram of Speeds')
-    axs[0].set_xlabel('Speed (px/s)')
-    axs[0].set_ylabel('Frequency')
-
-    axs[1].hist(all_angles, bins=30, color='green', edgecolor='black', alpha=0.7)
-    axs[1].set_title('Histogram of Angles')
-    axs[1].set_xlabel('Angle (radians)')
-    axs[1].set_ylabel('Frequency')
-
-    axs[2].hist(all_drift_rates, bins=30, color='red', edgecolor='black', alpha=0.7)
-    axs[2].set_title('Histogram of Drift Rates')
-    axs[2].set_xlabel('Drift Rate (radians/s)')
-    axs[2].set_ylabel('Frequency')
-
-    plt.show()
-
-    hist_interactive_filename = f'../histograms/larva_histograms_{timestamp}.html'
-    mpld3.save_html(fig, hist_interactive_filename)
-    '''
 
 if __name__ == "__main__":
     main()
