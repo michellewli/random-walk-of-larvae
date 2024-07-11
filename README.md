@@ -43,7 +43,6 @@ To start the simulation, run the following command:
    ```
 
 To run multiple simulations, run the following command:
-
     ```
     python src/run_simulations.py
     ```
