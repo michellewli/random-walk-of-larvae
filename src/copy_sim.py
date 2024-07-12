@@ -4,6 +4,7 @@ import random
 import csv
 from scipy.stats import truncnorm
 from datetime import datetime
+import mpld3
 import os
 
 # Helper function to generate truncated normal values
