@@ -125,20 +125,12 @@ class Larva:
                 self.plot_angles.append(self.angle)  # Update the angle list with the current angle
                 self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
 
-
 def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     larvae = []
-    all_speeds = []
-    all_angles = []
-    all_drift_rates = []
-
     for _ in range(num_larvae):
         larva = Larva(N, T, time_step, turn_bias, drift_bias)
         larva.simulate()
         larvae.append(larva)
-        all_speeds.extend(larva.speeds)
-        all_angles.extend(larva.angles[1:])  # Exclude the initial angle from the list of angles for histogram
-        all_drift_rates.extend(larva.drift_rates)
 
     colors = plt.get_cmap('tab20', num_larvae)  # Use a colormap to generate distinct colors
 
@@ -166,8 +158,7 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
                 current_angle = larva.angles[j]
                 runQ = current_angle - prev_angle
                 runL = np.sqrt((larva.turn_points_x[j] - prev_x) ** 2 + (larva.turn_points_y[j] - prev_y) ** 2)
-                runT = larva.timestamps[j] - prev_timestamp - (
-                    larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)
+                runT = larva.timestamps[j] - prev_timestamp - (larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = larva.turn_points_x[j]
@@ -212,10 +203,9 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     # Save interactive plot as HTML using mpld3
     os.makedirs('../simulations', exist_ok=True)
     interactive_filename = f'../simulations/larva_path_{timestamp}.html'
+    plt.savefig(f'../simulations/larva_path_{timestamp}.png')
     mpld3.save_html(plt.gcf(), interactive_filename)
-
-    plt.show()
-
+    plt.close()  # Close the plot to avoid blocking
 
 if __name__ == "__main__":
     main()
