@@ -100,7 +100,7 @@ class Larva:
                 drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
                 self.drift_rates.append(drift_rate)
 
-                drift_left_or_right = random.random()
+                drift_left_or_right = random.random()  # picks a random number for drift direction
 
                 v = get_truncated_normal(mean=v0, std_dev=stdevi)  # speed of larva in px/s
                 self.speeds.append(v)
