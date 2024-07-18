@@ -7,14 +7,17 @@ from datetime import datetime
 import mpld3
 import os
 
+
 # Helper function to generate truncated normal values
 def get_truncated_normal(mean: float, std_dev: float, lower_bound: float = 0) -> float:
     a = (lower_bound - mean) / std_dev  # Lower bound in standard normal terms
     return truncnorm(a, float('inf'), loc=mean, scale=std_dev).rvs()
 
+
 # Helper function to normalize angle between -π and π
 def normalize_angle(angle: float) -> float:
     return (angle + np.pi) % (2 * np.pi) - np.pi
+
 
 class Larva:
     def __init__(self, N: int, T: int, time_step: float, turn_bias: float = 0, drift_bias: float = 0):
@@ -41,18 +44,19 @@ class Larva:
         self.timestamps = [0]  # track timestamps including turn times
         self.plot_timestamps = [0]
         self.turn_times = []  # track individual turn times
-        self.drift_rates = []  # track drift rates
+        self.runL_distances = []  # track distances between turns
 
     def simulate(self):
         timestamp = 0
         lambda_ = 10
-        drift_rate = np.random.exponential(scale=1/lambda_)
-        self.drift_rates.append(drift_rate)
+        drift_rate = np.random.exponential(scale=1 / lambda_)
         drift_left_or_right = random.random()  # picks a random number from [0.0, 1.0)
 
         v0 = get_truncated_normal(mean=2.847191967574795, std_dev=0.3518021717781707)  # speed of larva in px/s
-        self.speeds.append(v0)
         stdevi = get_truncated_normal(mean=0.3518021717781707, std_dev=0.1622577507017134)
+
+        # Variable to accumulate distance during drift
+        drift_distance_accumulator = 0.0
 
         while timestamp <= self.T:
             timestamp += self.time_step
@@ -96,11 +100,11 @@ class Larva:
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
-                # pick a drift rate (dtheta/dt)
-                drift_rate = np.random.exponential(scale=1/lambda_)  # resets after each turn
-                self.drift_rates.append(drift_rate)
+                # Append accumulated drift distance as runL
+                self.runL_distances.append(drift_distance_accumulator)
+                drift_distance_accumulator = 0.0  # Reset accumulator for the next segment
 
-                drift_left_or_right = random.random()
+                drift_left_or_right = random.random()  # picks a random number for drift direction
 
                 v = get_truncated_normal(mean=v0, std_dev=stdevi)  # speed of larva in px/s
                 self.speeds.append(v)
@@ -110,7 +114,7 @@ class Larva:
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
 
-                prob_drift_left_or_right = self.drift_bias # probability of drifting left or right is the drift bias
+                prob_drift_left_or_right = self.drift_bias  # probability of drifting left or right is the drift bias
 
                 if drift_left_or_right < prob_drift_left_or_right:
                     self.angle += drift_angle
@@ -124,6 +128,15 @@ class Larva:
                 self.plot_y_positions.append(self.y)
                 self.plot_angles.append(self.angle)  # Update the angle list with the current angle
                 self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
+
+                # Accumulate distance during drift
+                drift_distance_accumulator += np.sqrt((v0 * np.cos(self.angle) * self.time_step) ** 2 +
+                                                      (v0 * np.sin(self.angle) * self.time_step) ** 2)
+
+        # Remove the last entry in runL distances since it doesn't correspond to a full segment
+        if self.num_turns > 0:
+            self.runL_distances.pop()
+
 
 def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     larvae = []
@@ -157,8 +170,10 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
                     break
                 current_angle = larva.angles[j]
                 runQ = current_angle - prev_angle
-                runL = np.sqrt((larva.turn_points_x[j] - prev_x) ** 2 + (larva.turn_points_y[j] - prev_y) ** 2)
-                runT = larva.timestamps[j] - prev_timestamp - (larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)
+                runL = larva.runL_distances[j - 1] if j - 1 < len(
+                    larva.runL_distances) else 0.0  # Use distance between turns as runL
+                runT = larva.timestamps[j] - prev_timestamp - (
+                    larva.turn_times[j - 1] if j - 1 < len(larva.turn_times) else 0)
                 runX0 = prev_x
                 runY0 = prev_y
                 runX1 = larva.turn_points_x[j]
@@ -203,9 +218,8 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     # Save interactive plot as HTML using mpld3
     os.makedirs('../simulations', exist_ok=True)
     interactive_filename = f'../simulations/larva_path_{timestamp}.html'
-    plt.savefig(f'../simulations/larva_path_{timestamp}.png')
     mpld3.save_html(plt.gcf(), interactive_filename)
-    plt.close()  # Close the plot to avoid blocking
+
 
 if __name__ == "__main__":
     main()
