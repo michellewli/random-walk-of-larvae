@@ -176,7 +176,7 @@ def main():
                 if j >= len(larva.angles) or j >= len(larva.timestamps) or j >= len(larva.speeds):
                     break
                 current_angle = larva.angles[j]
-                runQ = current_angle - prev_angle
+                runQ = normalize_angle(current_angle - prev_angle)
                 runL = larva.runL_distances[j - 1] if j - 1 < len(
                     larva.runL_distances) else 0.0  # Use distance between turns as runL
                 runT = larva.timestamps[j] - prev_timestamp - (
@@ -219,7 +219,7 @@ def main():
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
     plt.ylabel('Y position')
-    plt.legend(loc='upper right', bbox_to_anchor=(1, 1), ncol=1, fontsize='small')  # Place legend inside the plot
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1, fontsize='small')  # Place legend outside the plot
     plt.grid(True)
     plt.show()
 
