@@ -39,6 +39,7 @@ class Larva:
         self.num_runs = 0
         self.speeds = []
         self.angles = [self.angle]  # initialize with the starting angle in radians
+        self.drift_angles = []  # angle that the larva faces after finishing a sequence of drifts, Q1
         self.plot_angles = [self.angle]
         self.times = [0]  # start time at 0
         self.timestamps = [0]  # track timestamps including turn times
@@ -63,6 +64,9 @@ class Larva:
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
             if turn_or_not < self.turning_probability:  # will turn either left or right
+                self.angle = normalize_angle(self.angle)  # Normalize the angle
+                self.drift_angles.append(self.angle)  # Add the angle faced before turning in radians
+
                 # First, move to the current position based on the previous angle
                 self.x += v0 * np.cos(self.angle) * self.time_step
                 self.y += v0 * np.sin(self.angle) * self.time_step
@@ -166,10 +170,11 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
             prev_y = larva.turn_points_y[0]
             prev_timestamp = larva.timestamps[0]
             for j in range(1, len(larva.turn_points_x)):
-                if j >= len(larva.angles) or j >= len(larva.timestamps) or j >= len(larva.speeds):
+                if j >= len(larva.angles) or j >= len(larva.timestamps) or j >= len(larva.speeds) or j - 1 >= len(larva.drift_angles):
                     break
                 current_angle = larva.angles[j]
-                runQ = current_angle - prev_angle
+                Q1 = larva.drift_angles[j - 1]
+                runQ = normalize_angle(current_angle - prev_angle)
                 runL = larva.runL_distances[j - 1] if j - 1 < len(
                     larva.runL_distances) else 0.0  # Use distance between turns as runL
                 runT = larva.timestamps[j] - prev_timestamp - (
@@ -190,7 +195,7 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
                     'runT': runT,
                     'runX': runX1,
                     'reo#HS': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
-                    'reoQ1': prev_angle,
+                    'reoQ1': Q1,
                     'reoQ2': current_angle,
                     'reoHS1': np.random.choice([0, 1, 2, 3, 4, 5], p=[0.05, 0.7, 0.1, 0.05, 0.05, 0.05]),
                     'runQ0': prev_angle,
@@ -212,8 +217,9 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     plt.title('Larvae Random Walk with Turning Points')
     plt.xlabel('X position')
     plt.ylabel('Y position')
-    plt.legend(loc='upper right', bbox_to_anchor=(1, 1), ncol=1, fontsize='small')  # Place legend inside the plot
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1, fontsize='small')  # Place legend outside the plot
     plt.grid(True)
+    plt.show()
 
     # Save interactive plot as HTML using mpld3
     os.makedirs('../simulations', exist_ok=True)
