@@ -219,7 +219,6 @@ def main(N, T, time_step, num_larvae, turn_bias, drift_bias):
     plt.ylabel('Y position')
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1, fontsize='small')  # Place legend outside the plot
     plt.grid(True)
-    plt.show()
 
     # Save interactive plot as HTML using mpld3
     os.makedirs('../simulations', exist_ok=True)
