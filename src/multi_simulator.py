@@ -46,6 +46,7 @@ class Larva:
         self.plot_timestamps = [0]
         self.turn_times = []  # track individual turn times
         self.runL_distances = []  # track distances between turns
+        self.last_move = "D"  # Initialize last move as drift
 
     def simulate(self):
         timestamp = 0
@@ -58,14 +59,27 @@ class Larva:
 
         # Variable to accumulate distance during drift
         drift_distance_accumulator = 0.0
+        drift_start_x = self.x
+        drift_start_y = self.y
+        moves = []
 
         while timestamp <= self.T:
             timestamp += self.time_step
             turn_or_not = np.random.uniform(0.0, 1.0)  # random float to compare with probability of turning
 
+            # Prevent consecutive turns
+            if self.last_move == "T":
+                turn_or_not = 1.0  # Force drift if last move was a turn
+
             if turn_or_not < self.turning_probability:  # will turn either left or right
+                moves.append("T")
                 self.angle = normalize_angle(self.angle)  # Normalize the angle
                 self.drift_angles.append(self.angle)  # Add the angle faced before turning in radians
+
+                # Calculate drift distance before turn
+                if drift_distance_accumulator > 0:
+                    self.runL_distances.append(drift_distance_accumulator)
+                drift_distance_accumulator = 0.0  # Reset accumulator for the next segment
 
                 # First, move to the current position based on the previous angle
                 self.x += v0 * np.cos(self.angle) * self.time_step
@@ -104,16 +118,19 @@ class Larva:
                 self.x_positions.append(self.x)
                 self.y_positions.append(self.y)
 
-                # Append accumulated drift distance as runL
-                self.runL_distances.append(drift_distance_accumulator)
-                drift_distance_accumulator = 0.0  # Reset accumulator for the next segment
-
                 drift_left_or_right = random.random()  # picks a random number for drift direction
 
                 v = get_truncated_normal(mean=v0, std_dev=stdevi)  # speed of larva in px/s
                 self.speeds.append(v)
 
+                # Start new drift segment
+                drift_start_x = self.x
+                drift_start_y = self.y
+
+                self.last_move = "T"  # Update last move to turn
+
             else:  # will go straight (with slight drift)
+                moves.append("D")
                 self.num_runs += 1
 
                 drift_angle = drift_rate * self.time_step  # Calculate drift angle based on drift rate and time step
@@ -134,13 +151,16 @@ class Larva:
                 self.plot_timestamps.append(timestamp)  # Update the timestamps list with the current time
 
                 # Accumulate distance during drift
-                drift_distance_accumulator += np.sqrt((v0 * np.cos(self.angle) * self.time_step) ** 2 +
-                                                      (v0 * np.sin(self.angle) * self.time_step) ** 2)
+                drift_distance_accumulator += np.sqrt((self.x - drift_start_x) ** 2 +
+                                                      (self.y - drift_start_y) ** 2)
+                drift_start_x = self.x
+                drift_start_y = self.y
 
-        # Remove the last entry in runL distances since it doesn't correspond to a full segment
-        if self.num_turns > 0:
-            self.runL_distances.pop()
+                self.last_move = "D"  # Update last move to drift
 
+        # At the end of the simulation, add the last drift distance if applicable
+        if drift_distance_accumulator > 0 and self.num_turns > 0:
+            self.runL_distances.append(drift_distance_accumulator)
 
 def main():
     N = int(input("Number of turns (N): "))  # number of turns
