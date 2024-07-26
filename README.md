@@ -10,8 +10,8 @@ To run the larva simulation, you'll need to have Python installed on your system
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/larva-simulation.git
-   cd larva-simulation
+   git clone https://github.com/yourusername/random-walk-of-larvae.git
+   cd random-walk-of-larvae
    ```
 
 2. **Create a virtual environment:**
